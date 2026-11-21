@@ -1,0 +1,40 @@
+{
+  "source": {
+    "file": "gemini_generated_video_3a911923_gwr_video_mvp.mp4",
+    "width": 1280,
+    "height": 720,
+    "fps": 24,
+    "frame_count": 240,
+    "duration_seconds": 10.026667
+  },
+  "full_quality": {
+    "folder": "full_quality_240_frames",
+    "pattern": "frame_%04d.webp",
+    "start": 1,
+    "end": 240,
+    "fps": 24,
+    "width": 1280,
+    "height": 720,
+    "webp_quality": 90
+  },
+  "desktop_optimized": {
+    "folder": "website_optimized_120_frames",
+    "pattern": "frame_%04d.webp",
+    "start": 1,
+    "end": 120,
+    "fps": 12,
+    "width": 1280,
+    "height": 720,
+    "webp_quality": 78
+  },
+  "mobile_optimized": {
+    "folder": "website_mobile_120_frames",
+    "pattern": "frame_%04d.webp",
+    "start": 1,
+    "end": 120,
+    "fps": 12,
+    "width": 640,
+    "height": 360,
+    "webp_quality": 73
+  }
+}
