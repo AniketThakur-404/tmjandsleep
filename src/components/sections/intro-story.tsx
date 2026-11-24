@@ -12,12 +12,19 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 /** Fixed header height (px). */
 const HEADER = 88;
-/** Scroll distance while pinned (slide 1 hold → swap → slide 2 hold). */
-const PIN_DISTANCE = "+=450%";
-/** Seconds the animation takes to catch up with the scroll position (smooths out wheel steps). */
-const SMOOTH = 1.2;
-/** Pinned scroll distance on phones / tablets. */
-const PIN_DISTANCE_MOBILE = "+=420%";
+/**
+ * Timeline units = screen heights of scroll.
+ * ENTER: the section rises from 75% of the viewport to the top (not pinned).
+ * PIN / PIN_MOBILE: how long it then stays pinned (hold → swap → hold).
+ */
+const ENTER = 0.75;
+const PIN = 3.5;
+const PIN_MOBILE = 3.8;
+/**
+ * Seconds the animation trails the scroll position. Kept short — Lenis
+ * already smooths the scroll, and a long lag on top of it feels stuck.
+ */
+const SMOOTH = 0.5;
 
 /* Clip-path states (sharp edges, no rounding — cheaper to paint) */
 const SHOWN = "inset(0% 0% 0% 0%)";
@@ -41,66 +48,57 @@ export function IntroStory() {
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
+      const lazy = { immediateRender: false } as const;
+
+      /**
+       * One pin + ONE scrubbed timeline that runs from the moment the section
+       * starts rising until the pin releases. (Two separate timelines driving
+       * the same clip-path used to fight at the hand-off and stall mid-wipe.)
+       */
+      const build = (pinUnits: number) => {
+        const stageEl = stage.current!;
+        const pinST = ScrollTrigger.create({
+          trigger: stageEl,
+          start: "top top",
+          end: () => `+=${stageEl.offsetHeight * pinUnits}`,
+          pin: true,
+          invalidateOnRefresh: true,
+        });
+        return gsap.timeline({
+          defaults: { ease: "none" },
+          scrollTrigger: {
+            trigger: stageEl,
+            start: "top 75%",
+            end: () => pinST.end,
+            scrub: SMOOTH,
+            invalidateOnRefresh: true,
+          },
+        });
+      };
 
       mm.add("(min-width: 1024px)", () => {
         const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         const zoom = reduce ? 1 : 1.15;
-        // Wipe stops part-way while the section is still rising, then finishes once pinned
-        const PARTLY_OPEN = "inset(0% 60% 0% 0%)";
-        const midZoom = reduce ? 1 : 1.1;
-        const lazy = { immediateRender: false } as const;
 
         gsap.set("[data-slide='2']", { autoAlpha: 1 });
         gsap.set("[data-img='2']", { clipPath: HIDDEN_LEFT });
         gsap.set(["[data-copy='1'] > *", "[data-copy='2'] > *"], { y: 50, autoAlpha: 0 });
 
-        // --- Entrance: section rises over the hero; image starts opening ---
-        gsap
-          .timeline({
-            defaults: { ease: "none" },
-            scrollTrigger: { trigger: stage.current, start: "top 75%", end: "top top", scrub: SMOOTH },
-          })
-          .fromTo("[data-img='1']", { clipPath: HIDDEN_RIGHT }, { clipPath: PARTLY_OPEN, ease: "power1.in", duration: 1 }, 0)
-          .fromTo("[data-img-inner='1']", { scale: zoom }, { scale: midZoom, duration: 1 }, 0);
-
-        // --- Pinned: finish slide 1 → hold → swap → hold ---
-        gsap
-          .timeline({
-            defaults: { ease: "none" },
-            scrollTrigger: {
-              trigger: stage.current,
-              start: "top top",
-              end: PIN_DISTANCE,
-              pin: true,
-              scrub: SMOOTH,
-              anticipatePin: 1,
-              invalidateOnRefresh: true,
-            },
-          })
-          // 0 → 0.2  slide 1 finishes opening, copy rises in
-          .fromTo("[data-img='1']", { clipPath: PARTLY_OPEN }, { clipPath: SHOWN, duration: 0.2, ease: "power2.out", ...lazy }, 0)
-          .fromTo("[data-img-inner='1']", { scale: midZoom }, { scale: 1, duration: 0.24, ...lazy }, 0)
-          .fromTo(
-            "[data-copy='1'] > *",
-            { y: 50, autoAlpha: 0 },
-            { y: 0, autoAlpha: 1, stagger: 0.035, duration: 0.12, ease: "power2.out", ...lazy },
-            0.04,
-          )
-          // 0.22 → 0.38  hold slide 1
-          // 0.38 → 0.72  swap (slide 1 out, slide 2 in — overlapping so the screen is never empty)
-          .fromTo("[data-copy='1'] > *", { y: 0, autoAlpha: 1 }, { y: -40, autoAlpha: 0, stagger: 0.025, duration: 0.12, ease: "power1.in", ...lazy }, 0.38)
-          .fromTo("[data-img='1']", { clipPath: SHOWN }, { clipPath: HIDDEN_UP, duration: 0.24, ease: "power2.inOut", ...lazy }, 0.4)
-          .fromTo("[data-img-inner='1']", { yPercent: 0 }, { yPercent: reduce ? 0 : -8, duration: 0.24, ...lazy }, 0.4)
-          .fromTo("[data-img='2']", { clipPath: HIDDEN_LEFT }, { clipPath: SHOWN, duration: 0.26, ease: "power2.inOut", ...lazy }, 0.42)
-          .fromTo("[data-img-inner='2']", { scale: zoom }, { scale: 1, duration: 0.32, ...lazy }, 0.42)
-          .fromTo(
-            "[data-copy='2'] > *",
-            { y: 50, autoAlpha: 0 },
-            { y: 0, autoAlpha: 1, stagger: 0.03, duration: 0.12, ease: "power2.out", ...lazy },
-            0.56,
-          )
-          // 0.75 → 1  hold slide 2
-          .to({}, { duration: 0.25 }, 0.75);
+        const P = ENTER; // pin starts here
+        build(PIN)
+          // Entrance (rising over the hero): slide 1 fully opens and its copy is in by the time it pins
+          .fromTo("[data-img='1']", { clipPath: HIDDEN_RIGHT }, { clipPath: SHOWN, duration: P, ease: "power1.inOut" }, 0)
+          .fromTo("[data-img-inner='1']", { scale: zoom }, { scale: 1, duration: P + 0.2 }, 0)
+          .fromTo("[data-copy='1'] > *", { y: 50, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.06, duration: 0.3, ease: "power2.out", ...lazy }, P - 0.3)
+          // Pinned: hold slide 1 (P → P+1), then swap
+          .fromTo("[data-copy='1'] > *", { y: 0, autoAlpha: 1 }, { y: -40, autoAlpha: 0, stagger: 0.04, duration: 0.3, ease: "power1.in", ...lazy }, P + 1)
+          .fromTo("[data-img='1']", { clipPath: SHOWN }, { clipPath: HIDDEN_UP, duration: 0.8, ease: "power2.inOut", ...lazy }, P + 1.1)
+          .fromTo("[data-img-inner='1']", { yPercent: 0 }, { yPercent: reduce ? 0 : -8, duration: 0.8, ...lazy }, P + 1.1)
+          .fromTo("[data-img='2']", { clipPath: HIDDEN_LEFT }, { clipPath: SHOWN, duration: 0.9, ease: "power2.inOut", ...lazy }, P + 1.2)
+          .fromTo("[data-img-inner='2']", { scale: zoom }, { scale: 1, duration: 1.1, ...lazy }, P + 1.2)
+          .fromTo("[data-copy='2'] > *", { y: 50, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.05, duration: 0.3, ease: "power2.out", ...lazy }, P + 1.75)
+          // hold slide 2 until the pin releases
+          .set({}, {}, P + PIN);
       });
 
       // ---------------- Mobile / tablet: same pinned sequence ----------------
@@ -109,8 +107,6 @@ export function IntroStory() {
       mm.add("(max-width: 1023px)", () => {
         const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         const zoom = reduce ? 1 : 1.15;
-        const PARTLY_OPEN = "inset(0% 55% 0% 0%)";
-        const lazy = { immediateRender: false } as const;
         const stageEl = stage.current!;
         // The image's frame shrinks to the band above the panel, so the picture refits into it
         const fit = (n: "1" | "2") => () => `${stageEl.querySelector<HTMLElement>(`[data-panel='${n}']`)!.offsetHeight}px`;
@@ -120,43 +116,25 @@ export function IntroStory() {
         gsap.set("[data-panel]", { yPercent: 102 });
         gsap.set(["[data-copy='1'] > *", "[data-copy='2'] > *"], { y: 30, autoAlpha: 0 });
 
-        gsap
-          .timeline({
-            defaults: { ease: "none" },
-            scrollTrigger: { trigger: stageEl, start: "top 75%", end: "top top", scrub: SMOOTH },
-          })
-          .fromTo("[data-img='1']", { clipPath: HIDDEN_RIGHT }, { clipPath: PARTLY_OPEN, ease: "power1.in", duration: 1 }, 0)
-          .fromTo("[data-img-inner='1']", { scale: zoom }, { scale: reduce ? 1 : 1.08, duration: 1 }, 0);
-
-        gsap
-          .timeline({
-            defaults: { ease: "none" },
-            scrollTrigger: {
-              trigger: stageEl,
-              start: "top top",
-              end: PIN_DISTANCE_MOBILE,
-              pin: true,
-              scrub: SMOOTH,
-              anticipatePin: 1,
-              invalidateOnRefresh: true,
-            },
-          })
-          // slide 1: finish opening, then the panel rises and the image shrinks above it
-          .fromTo("[data-img='1']", { clipPath: PARTLY_OPEN }, { clipPath: SHOWN, duration: 0.16, ease: "power2.out", ...lazy }, 0)
-          .fromTo("[data-img-inner='1']", { scale: reduce ? 1 : 1.08 }, { scale: 1, duration: 0.18, ...lazy }, 0)
-          .fromTo("[data-panel='1']", { yPercent: 102 }, { yPercent: 0, duration: 0.14, ease: "power2.out", ...lazy }, 0.14)
-          .fromTo("[data-img-fit='1']", { bottom: 0 }, { bottom: fit("1"), duration: 0.14, ease: "power2.out", ...lazy }, 0.14)
-          .fromTo("[data-copy='1'] > *", { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.025, duration: 0.08, ease: "power2.out", ...lazy }, 0.2)
-          // hold 0.3 -> 0.42, then swap
-          .fromTo("[data-panel='1']", { yPercent: 0 }, { yPercent: 102, duration: 0.1, ease: "power2.in", ...lazy }, 0.42)
-          .fromTo("[data-img='1']", { clipPath: SHOWN }, { clipPath: HIDDEN_UP, duration: 0.16, ease: "power2.inOut", ...lazy }, 0.46)
-          .fromTo("[data-img='2']", { clipPath: HIDDEN_LEFT }, { clipPath: SHOWN, duration: 0.18, ease: "power2.inOut", ...lazy }, 0.48)
-          .fromTo("[data-img-inner='2']", { scale: zoom }, { scale: 1, duration: 0.22, ...lazy }, 0.48)
-          .fromTo("[data-panel='2']", { yPercent: 102 }, { yPercent: 0, duration: 0.14, ease: "power2.out", ...lazy }, 0.64)
-          .fromTo("[data-img-fit='2']", { bottom: 0 }, { bottom: fit("2"), duration: 0.14, ease: "power2.out", ...lazy }, 0.64)
-          .fromTo("[data-copy='2'] > *", { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.025, duration: 0.08, ease: "power2.out", ...lazy }, 0.7)
-          // hold slide 2
-          .to({}, { duration: 0.2 }, 0.8);
+        const P = ENTER;
+        build(PIN_MOBILE)
+          // Entrance: image opens fully while the section rises
+          .fromTo("[data-img='1']", { clipPath: HIDDEN_RIGHT }, { clipPath: SHOWN, duration: P, ease: "power1.inOut" }, 0)
+          .fromTo("[data-img-inner='1']", { scale: zoom }, { scale: 1, duration: P + 0.2 }, 0)
+          // Pinned: panel rises, image shrinks above it, copy in
+          .fromTo("[data-panel='1']", { yPercent: 102 }, { yPercent: 0, duration: 0.5, ease: "power2.out", ...lazy }, P + 0.1)
+          .fromTo("[data-img-fit='1']", { bottom: 0 }, { bottom: fit("1"), duration: 0.5, ease: "power2.out", ...lazy }, P + 0.1)
+          .fromTo("[data-copy='1'] > *", { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.05, duration: 0.3, ease: "power2.out", ...lazy }, P + 0.3)
+          // hold, then swap
+          .fromTo("[data-panel='1']", { yPercent: 0 }, { yPercent: 102, duration: 0.4, ease: "power2.in", ...lazy }, P + 1.25)
+          .fromTo("[data-img='1']", { clipPath: SHOWN }, { clipPath: HIDDEN_UP, duration: 0.7, ease: "power2.inOut", ...lazy }, P + 1.4)
+          .fromTo("[data-img='2']", { clipPath: HIDDEN_LEFT }, { clipPath: SHOWN, duration: 0.8, ease: "power2.inOut", ...lazy }, P + 1.5)
+          .fromTo("[data-img-inner='2']", { scale: zoom }, { scale: 1, duration: 1, ...lazy }, P + 1.5)
+          .fromTo("[data-panel='2']", { yPercent: 102 }, { yPercent: 0, duration: 0.5, ease: "power2.out", ...lazy }, P + 2.2)
+          .fromTo("[data-img-fit='2']", { bottom: 0 }, { bottom: fit("2"), duration: 0.5, ease: "power2.out", ...lazy }, P + 2.2)
+          .fromTo("[data-copy='2'] > *", { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.05, duration: 0.3, ease: "power2.out", ...lazy }, P + 2.4)
+          // hold slide 2 until the pin releases
+          .set({}, {}, P + PIN_MOBILE);
       });
 
       return () => mm.revert();
@@ -174,7 +152,8 @@ export function IntroStory() {
           <p className="mt-3 text-[clamp(13.5px,1.8vh,15px)] leading-[1.6] text-ink-soft md:text-[16px] lg:mt-6 lg:leading-[1.75] [@media(max-height:760px)]:lg:mt-4 [@media(max-height:760px)]:lg:text-[14.5px]">
             Understanding what may be contributing to your symptoms is the first step towards developing an appropriate, individualised management plan.
           </p>
-          <p className="mt-2.5 text-[clamp(13.5px,1.8vh,15px)] leading-[1.6] text-ink-soft md:text-[16px] lg:mt-4 lg:leading-[1.75] [@media(max-height:760px)]:lg:mt-3 [@media(max-height:760px)]:lg:text-[14.5px]">
+          {/* Hidden on phones: the copy panel would otherwise leave the image only a thin strip */}
+          <p className="mt-2.5 text-[clamp(13.5px,1.8vh,15px)] leading-[1.6] text-ink-soft max-sm:hidden md:text-[16px] lg:mt-4 lg:leading-[1.75] [@media(max-height:760px)]:lg:mt-3 [@media(max-height:760px)]:lg:text-[14.5px]">
             At the Sydney Centre for TMJ &amp; Sleep Therapy, we assess the jaw joints, jaw muscles, teeth, head and neck symptoms and, where clinically
             indicated, sleep and breathing factors, nutritional factors and emotional factors that may be relevant to your condition.
           </p>
@@ -227,7 +206,7 @@ function Slide({
                 alt={image.alt}
                 fill
                 sizes="(min-width: 1024px) 50vw, 100vw"
-                className="object-contain px-5 pt-[calc(var(--hdr)+8px)] pb-11 lg:px-10 lg:pt-[calc(var(--hdr)+16px)] lg:pb-16"
+                className="object-contain px-3 pt-[calc(var(--hdr)+4px)] pb-9 sm:px-5 sm:pb-11 lg:px-10 lg:pt-[calc(var(--hdr)+16px)] lg:pb-16"
                 style={{ "--hdr": `${HEADER}px` } as React.CSSProperties}
               />
             </div>

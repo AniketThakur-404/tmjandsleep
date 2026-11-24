@@ -48,6 +48,22 @@ export function Loader() {
 
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const progress = { p: 0 };
+
+      // Put the split exactly on the logo's rule line (not the screen centre).
+      // The artwork in each half is anchored to the full viewport height, so
+      // the rule's position never depends on where the split is.
+      const measure = () => {
+        const el = root.current;
+        if (!el) return;
+        const box = el.getBoundingClientRect();
+        el.style.setProperty("--full", `${box.height}px`);
+        const rule = el.querySelector<HTMLElement>("[data-panel='top'] [data-rule]");
+        if (!rule) return;
+        const r = rule.getBoundingClientRect();
+        if (r.height > 0) el.style.setProperty("--split", `${r.top + r.height / 2 - box.top}px`);
+      };
+      measure();
+      window.addEventListener("resize", measure);
       const setBar = () => gsap.set("[data-progress]", { scaleX: progress.p });
 
       const finish = () => {
@@ -125,6 +141,7 @@ export function Loader() {
           ease: "power2.out",
           onUpdate: setBar,
           onComplete: () => {
+            measure();
             exit.play();
           },
         });
@@ -132,6 +149,7 @@ export function Loader() {
 
       return () => {
         cancelled = true;
+        window.removeEventListener("resize", measure);
         document.documentElement.classList.remove("is-loading");
       };
     },
@@ -141,23 +159,39 @@ export function Loader() {
   if (done) return null;
 
   return (
-    <div ref={root} className="fixed inset-0 z-[100]" role="status" aria-live="polite">
+    <div
+      ref={root}
+      className="fixed inset-0 z-[100]"
+      role="status"
+      aria-live="polite"
+      style={{ "--split": "50%", "--full": "100dvh" } as React.CSSProperties}
+    >
       <span className="sr-only">Loading</span>
 
-      {/* The two halves carry identical artwork, so the logo splits with them */}
-      <div data-panel="top" className="absolute inset-x-0 top-0 h-1/2 overflow-hidden bg-paper">
-        <div className="absolute inset-x-0 top-0 h-[200%]">
+      {/* The two halves carry identical artwork, so the logo splits with them.
+          The split point (--split) is measured to sit on the logo's rule line. */}
+      <div data-panel="top" className="absolute inset-x-0 top-0 overflow-hidden bg-paper" style={{ height: "var(--split)" }}>
+        <div className="absolute inset-x-0 top-0" style={{ height: "var(--full)" }}>
           <LoaderArt />
         </div>
       </div>
-      <div data-panel="bottom" className="absolute inset-x-0 bottom-0 h-1/2 overflow-hidden bg-paper" aria-hidden>
-        <div className="absolute inset-x-0 bottom-0 h-[200%]">
+      <div
+        data-panel="bottom"
+        className="absolute inset-x-0 bottom-0 overflow-hidden bg-paper"
+        style={{ height: "calc(100% - var(--split))" }}
+        aria-hidden
+      >
+        <div className="absolute inset-x-0 bottom-0" style={{ height: "var(--full)" }}>
           <LoaderArt />
         </div>
       </div>
 
       {/* Hairline that cuts across before the split */}
-      <div data-cut className="absolute inset-x-0 top-1/2 h-[1.5px] -translate-y-1/2 scale-x-0 bg-ink" />
+      <div
+        data-cut
+        className="absolute inset-x-0 h-[1.5px] -translate-y-1/2 scale-x-0 bg-ink"
+        style={{ top: "var(--split)" }}
+      />
     </div>
   );
 }
