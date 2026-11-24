@@ -3,12 +3,32 @@ import { Section } from "@/components/section";
 import { SectionHeading } from "@/components/section-heading";
 import { Reveal } from "@/components/motion/reveal";
 import { ArrowButton } from "@/components/ui-brand/arrow-button";
+import { ImageTrail } from "@/components/motion/image-trail";
 import { site } from "@/lib/site";
+
+/** Clinical images that trail the cursor across this section. */
+const TRAIL_IMAGES = [
+  "/images/tmj-anatomy.png",
+  "/images/closed-mouth-anatomy.png",
+  "/images/tooth-wear.png",
+  "/images/tongue-scalloping.png",
+  "/images/cracked-teeth.png",
+  "/images/facial-pain.png",
+  "/images/headaches.png",
+  "/images/limited-opening.png",
+  "/images/jaw-noises.png",
+  "/images/morning-soreness.png",
+  "/images/forward-head-carriage.jpg",
+  "/images/bruxism-muscles.png",
+  "/images/tori.png",
+  "/images/domino-effect.png",
+];
 
 export function Cta() {
   return (
     <Section tone="dark" id="contact">
-      <div className="container-site">
+      <ImageTrail images={TRAIL_IMAGES} />
+      <div className="relative z-10 container-site">
         <SectionHeading align="center" eyebrow="Take the First Step" title="Understand what may be" accent="contributing to your symptoms" />
 
         <Reveal className="copy mx-auto mt-8 max-w-[760px] text-center">
@@ -37,7 +57,7 @@ export function Cta() {
           {site.address.join(" ")}
         </p>
 
-        <Reveal className="mx-auto mt-16 max-w-[860px] rounded-2xl bg-panel p-8 text-center ring-1 ring-cream/10 md:p-10">
+        <Reveal data-trail-off className="mx-auto mt-16 max-w-[860px] rounded-2xl bg-panel p-8 text-center ring-1 ring-cream/10 md:p-10">
           <h2 className="display text-[28px] text-cream md:text-[34px]">Important information</h2>
           <div className="copy mt-4">
             <p>
