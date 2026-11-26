@@ -24,7 +24,9 @@ import { useLenis } from "lenis/react";
 import { Section } from "@/components/section";
 import { SectionHeading } from "@/components/section-heading";
 import { Reveal } from "@/components/motion/reveal";
-import { manageAreas } from "@/content/tmj";
+import { Rich } from "@/components/rich";
+import { StackCards } from "@/components/stack-cards";
+import { manageAreas, whyChoose } from "@/content/tmj";
 import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -39,9 +41,9 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 /** One image per treatment area (from public/images). */
 const AREA_IMAGES: Record<string, { src: string; alt: string }> = {
-  "Breathing & Sleep": { src: "/images/morning-soreness.png", alt: "Person waking with jaw soreness in bed" },
-  "Jaw Pain & Function": { src: "/images/facial-pain.png", alt: "Person holding a painful jaw" },
-  "Stress, Behaviour & Pain Regulation": { src: "/images/headaches.png", alt: "Person holding their temples with a tension headache" },
+  "Splints & Night Guards": { src: "/images/morning-soreness.png", alt: "Person waking with jaw soreness in bed" },
+  "Self Care & Guided Movement": { src: "/images/facial-pain.png", alt: "Person holding a painful jaw" },
+  "Checking Whether Treatment Is Helping": { src: "/images/headaches.png", alt: "Person holding their temples with a headache" },
 };
 
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
@@ -60,18 +62,22 @@ export function Manage() {
     <Section tone="dark" flush id="treatment" className="pt-24 md:pt-32">
       <div className="container-site">
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-20">
-          <SectionHeading eyebrow="Our Integrated Approach" title="How we" accent="manage TMJ pain" />
+          <SectionHeading eyebrow="Our Approach" title="TMJ and jaw pain" accent="treatment options" />
           <Reveal className="copy lg:pt-9">
-            <p>TMD can involve more than one contributing factor, which means management is not necessarily the same for every person.</p>
-            <p>Your treatment plan depends on your diagnosis, symptoms, contributing factors, general health and individual needs.</p>
-            <p className="text-[18px]! text-cream">Not every patient requires every treatment described below.</p>
-            <p>Where possible, management generally begins with appropriate conservative and reversible approaches.</p>
+            <p className="text-[18px]! text-cream">
+              <Rich text="For painful TMD, care generally starts with conservative, reversible approaches. The aim is to improve comfort and function while avoiding unnecessary permanent changes to the teeth or bite. [1,16]" />
+            </p>
+            <p>
+              A recent flare and pain lasting several months may need different plans. We discuss what each option may achieve, its limitations and when to
+              review it.
+            </p>
           </Reveal>
         </div>
       </div>
 
       <DesktopArchive steps={steps} areaStart={areaStart} />
       <MobileArchive steps={steps} areaStart={areaStart} />
+      <WhyChoose />
     </Section>
   );
 }
@@ -190,7 +196,7 @@ function DesktopArchive({ steps, areaStart }: { steps: Step[]; areaStart: number
     <div ref={track} className="relative mt-16 hidden lg:block" style={{ height: "500vh" }}>
       <div
         ref={stage}
-        className="sticky w-full overflow-hidden bg-surface"
+        className="@container sticky w-full overflow-hidden bg-surface"
         style={{ top: HEADER, height: `calc(100svh - ${HEADER}px)` }}
       >
         {/* Banner strip (intro): one column per area, rises then gets pushed right */}
@@ -228,7 +234,7 @@ function DesktopArchive({ steps, areaStart }: { steps: Step[]; areaStart: number
 
         {/* Light content panel (left) */}
         <div data-panel className="absolute top-0 left-0 z-20 h-full w-[64%] overflow-hidden bg-paper text-ink xl:w-[72%]">
-          <div className="absolute inset-y-0 left-0 flex w-[64vw] flex-col px-[clamp(28px,3.2vw,56px)] pt-[clamp(16px,3vh,40px)] pb-[clamp(12px,2.5vh,32px)] xl:w-[72vw]">
+          <div className="absolute inset-y-0 left-0 flex w-[64cqw] flex-col px-[clamp(28px,3.2vw,56px)] pt-[clamp(16px,3vh,40px)] pb-[clamp(12px,2.5vh,32px)] xl:w-[72cqw]">
             {/* hairline progress */}
             <div className="absolute inset-x-0 top-0 h-px bg-ink/10">
               <div data-progress className="h-full w-full origin-left scale-x-0 bg-gold-deep" />
@@ -259,7 +265,7 @@ function DesktopArchive({ steps, areaStart }: { steps: Step[]; areaStart: number
             </h3>
 
             {/* Row 2: current treatment (left) + index (right) */}
-            <div className="mt-[clamp(12px,3vh,36px)] grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_auto] gap-10 xl:gap-14">
+            <div className="mt-[clamp(12px,3vh,36px)] grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_auto] gap-8 xl:gap-14">
               <div data-meta className="min-h-0">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
@@ -268,12 +274,14 @@ function DesktopArchive({ steps, areaStart }: { steps: Step[]; areaStart: number
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -12 }}
                     transition={{ duration: 0.4, ease: EASE }}
-                    className="max-w-[640px] border-t border-ink/15 pt-4"
+                    className="max-w-[680px] border-t border-ink/15 pt-4"
                   >
-                    <h4 className="font-display text-[24px] leading-[1.2] text-ink">{current.item.title}</h4>
-                    <div className="mt-3 space-y-2.5 text-[15.5px] leading-[1.65] text-ink-soft">
+                    <h4 className="font-display text-[clamp(24px,3.6vh,32px)] leading-[1.2] text-ink">{current.item.title}</h4>
+                    <div className="mt-3 space-y-3 text-[clamp(16px,2.2vh,19px)] leading-[1.65] text-ink">
                       {current.item.body.map((p) => (
-                        <p key={p}>{p}</p>
+                        <p key={p}>
+                          <Rich text={p} />
+                        </p>
                       ))}
                     </div>
                   </motion.div>
@@ -281,7 +289,7 @@ function DesktopArchive({ steps, areaStart }: { steps: Step[]; areaStart: number
               </div>
 
               {/* Index: every area is a row; the current area expands to list its treatments */}
-              <nav data-meta aria-label="Treatments" className="w-[290px] self-start xl:w-[320px]">
+              <nav data-meta aria-label="Treatments" className="w-[250px] self-start xl:w-[320px]">
                 <ul className="border-t border-ink/12">
                   {manageAreas.map((a, k) => {
                     const open = current.areaIdx === k;
@@ -522,9 +530,11 @@ function MobileArchive({ steps, areaStart }: { steps: Step[]; areaStart: number[
                 )}
               >
                 <h4 className="font-display text-[clamp(17px,2.4vh,20px)] leading-[1.25] text-ink">{s.item.title}</h4>
-                <div className="mt-2 space-y-[clamp(4px,0.9vh,8px)] text-[clamp(13px,1.75vh,14.5px)] leading-[1.55] text-ink-soft md:text-[15.5px]">
+                <div className="mt-2 space-y-[clamp(4px,0.9vh,8px)] text-[clamp(14px,1.9vh,16px)] leading-[1.6] text-ink md:text-[17px]">
                   {s.item.body.map((p) => (
-                    <p key={p}>{p}</p>
+                    <p key={p}>
+                      <Rich text={p} />
+                    </p>
                   ))}
                 </div>
               </div>
@@ -543,6 +553,25 @@ function MobileArchive({ steps, areaStart }: { steps: Step[]; areaStart: number[
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** "Why Choose Sydney Centre for TMJ and Sleep Therapy in Sydney CBD?" — closes the treatment section, as stacking cards. */
+function WhyChoose() {
+  return (
+    <div className="container-site pt-24 pb-24 md:pt-32 md:pb-32">
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-end lg:gap-20">
+        <Reveal>
+          <p className="eyebrow text-gold">Why choose us</p>
+          <h3 className="display mt-4 text-[26px] text-cream sm:text-[32px] md:text-[40px]">
+            Why choose Sydney Centre for TMJ and Sleep Therapy <span className="text-gold">in Sydney CBD?</span>
+          </h3>
+        </Reveal>
+      </div>
+
+      {/* One column of stacking cards (same component as "Other causes") */}
+      <StackCards items={whyChoose} tone="dark" className="mt-12" />
     </div>
   );
 }

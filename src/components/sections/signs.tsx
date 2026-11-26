@@ -8,7 +8,9 @@ import { useGSAP } from "@gsap/react";
 import { Section } from "@/components/section";
 import { SectionHeading } from "@/components/section-heading";
 import { Reveal } from "@/components/motion/reveal";
-import { signs } from "@/content/tmj";
+import { Rich } from "@/components/rich";
+import { signs, symptomList } from "@/content/tmj";
+import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -61,14 +63,27 @@ export function Signs() {
 
   return (
     <Section tone="light" flush id="symptoms" className="pt-24 pb-20 md:pt-32 md:pb-24">
-      <div className="container-site grid gap-8 lg:grid-cols-2 lg:items-end lg:gap-20">
-        <SectionHeading tone="light" eyebrow="Recognising possible bruxism" title="Signs that may be associated" accent="with clenching or grinding" />
+      <div className="container-site grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-20">
+        <SectionHeading tone="light" eyebrow="Understanding your symptoms" title="TMJ and jaw pain symptoms:" accent="what they may be telling you" />
         <Reveal className="copy">
-          <p>Bruxism can sometimes be associated with changes to the teeth, jaw muscles, and surrounding tissues.</p>
           <p>
-            However, <strong className="font-bold text-ink">none of the findings below confirms bruxism on its own</strong>, and many of these findings
-            can occur for reasons unrelated to grinding or clenching.
+            <Rich text="Where pain is felt does not always reveal where it starts. A chewing muscle can refer pain towards the temple; discomfort near the ear can come from the jaw, a tooth or the ear itself. [1,2,8]" />
           </p>
+          <p>
+            Before your appointment, note where it hurts, when it started and what changes it. Chewing, yawning, waking and concentrating can all provide
+            useful clues. <strong className="font-bold text-ink">Record whether your headache starts before or after the jaw pain.</strong>
+          </p>
+          <p className="text-ink">
+            <Rich text="Common TMJ and jaw pain symptoms include: [1,2]" />
+          </p>
+          <ul className="mt-3 divide-y divide-ink/10 border-y border-ink/10">
+            {symptomList.map((s) => (
+              <li key={s} className="flex gap-3.5 py-2.5 text-[15.5px] leading-[1.55] text-ink">
+                <span aria-hidden className="mt-[0.75em] h-px w-4 shrink-0 bg-gold-deep" />
+                {s}
+              </li>
+            ))}
+          </ul>
         </Reveal>
       </div>
 
@@ -85,13 +100,16 @@ export function Signs() {
                 className="group flex w-[80vw] max-w-[340px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-paper ring-1 ring-ink/[0.06] sm:w-[340px]"
               >
                 {/* Image height scales with the viewport so a whole card always fits on screen while pinned */}
-                <div className="relative h-[clamp(130px,22vh,220px)] shrink-0 overflow-hidden">
+                <div className={cn("relative h-[clamp(130px,22vh,220px)] shrink-0 overflow-hidden", s.fit === "contain" && "bg-white")}>
                   <Image
                     src={s.image}
                     alt={s.title}
                     fill
                     sizes="340px"
-                    className="object-cover transition-transform duration-[1.2s] ease-(--ease-soft) group-hover:scale-[1.05]"
+                    className={cn(
+                      "transition-transform duration-[1.2s] ease-(--ease-soft) group-hover:scale-[1.05]",
+                      s.fit === "contain" ? "object-contain p-3" : "object-cover",
+                    )}
                   />
                 </div>
                 <div className="flex-1 px-5 pt-4 pb-5 md:px-6 md:pt-5 md:pb-6">
@@ -99,7 +117,9 @@ export function Signs() {
                   <h3 className="mt-2 text-[20px] leading-[1.15] text-ink uppercase md:text-[22px]">{s.title}</h3>
                   <div className="mt-3 space-y-2 text-[14.5px] leading-[1.6] text-ink-soft md:space-y-2.5 md:text-[15px]">
                     {s.body.map((p) => (
-                      <p key={p}>{p}</p>
+                      <p key={p}>
+                        <Rich text={p} />
+                      </p>
                     ))}
                   </div>
                 </div>

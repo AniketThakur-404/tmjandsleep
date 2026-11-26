@@ -2,24 +2,38 @@ import Image from "next/image";
 import { Section } from "@/components/section";
 import { SectionHeading } from "@/components/section-heading";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
-import { CountUp } from "@/components/motion/count-up";
+import { Rich } from "@/components/rich";
 
+const cards = [
+  {
+    label: "At night",
+    title: "Grinding during sleep",
+    body: [
+      "A partner may hear grinding, or a dentist may notice signs that warrant investigation. Waking with tired jaw muscles or sore teeth can be another clue, although tooth wear or morning soreness alone cannot confirm current sleep bruxism. [17,20,21]",
+      "Sleep bruxism has been linked with sleep-disordered breathing such as sleep apnoea, as well as stress, anxiety, some medicines, alcohol, caffeine and smoking. [20,21]",
+    ],
+  },
+  {
+    label: "Protecting teeth",
+    title: "Night guards",
+    body: [
+      "A night guard can protect teeth from grinding damage, but its effect on jaw pain varies and it does not reliably stop grinding. Before agreeing to one, ask what it is intended to achieve and how the result will be reviewed. [17,19]",
+      "If sleep apnoea has been diagnosed, a mandibular advancement splint may be recommended for your breathing. A small controlled study suggests it may also reduce grinding in some people. [25]",
+    ],
+  },
+];
+
+/** "Teeth grinding and jaw clenching" */
 export function Headaches() {
   return (
-    <Section tone="light">
+    <Section tone="light" id="grinding">
       <div className="container-site">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
           <div>
-            <SectionHeading tone="light" eyebrow="Bruxism & Headaches" title="Can grinding" accent="cause headaches?" />
+            <SectionHeading tone="light" eyebrow="Bruxism" title="Teeth grinding and" accent="jaw clenching (bruxism)" />
             <Reveal className="copy mt-8">
-              <p>Bruxism, temporomandibular disorders, sleep disturbance and headache disorders can occur together.</p>
-              <p>In some people, increased activity or tenderness of the jaw and temple muscles may contribute to head or facial pain.</p>
-              <p className="text-ink">However, this relationship is not the same for everyone.</p>
-              <p>A person can have bruxism without headaches, headaches without bruxism, or both conditions for unrelated reasons.</p>
-              <p>Migraine, tension-type headache and other headache disorders are also common and may require medical assessment.</p>
               <p>
-                The aim of assessment is therefore <strong className="font-bold text-ink">not simply to assume that a headache is coming from the jaw</strong>,
-                but to determine whether the jaw and associated muscles appear to be contributing to the overall clinical picture.
+                <Rich text="Bruxism means grinding, clenching or related jaw muscle activity. It can happen while awake or asleep and does not always cause harm. When symptoms develop, they may include sore jaw muscles, worn or sensitive teeth and temple headaches. [17,20,21]" />
               </p>
             </Reveal>
           </div>
@@ -27,26 +41,31 @@ export function Headaches() {
           <Reveal delay={0.1}>
             <figure className="rounded-2xl bg-paper p-8 md:p-12">
               <Image
-                src="/images/bruxism-muscles.png"
-                alt="Muscles that become tender during bruxism"
-                width={290}
-                height={300}
-                className="mx-auto h-auto w-[260px] mix-blend-multiply md:w-[300px]"
+                src="/images/night-guard.jpg"
+                alt="Clear night guard on a dental model"
+                width={400}
+                height={400}
+                className="mx-auto h-auto w-[240px] rounded-full mix-blend-multiply md:w-[280px]"
               />
-              <figcaption className="eyebrow mt-6 text-center text-ink-soft">Muscles that become tender during bruxism</figcaption>
+              <figcaption className="eyebrow mt-6 text-center text-ink-soft">A night guard may protect teeth. Pain relief is a separate treatment goal.</figcaption>
             </figure>
           </Reveal>
         </div>
 
         <RevealGroup className="mt-16 grid gap-5 md:grid-cols-2">
-          <RevealItem className="rounded-2xl bg-ink p-8 text-cream md:p-10">
-            <CountUp value={65} suffix="%" className="block font-display text-[64px] leading-none text-gold" />
-            <p className="mt-5 text-[16px] leading-[1.6] text-cream/80">of patients with night-time bruxism also experience headaches.</p>
-          </RevealItem>
-          <RevealItem className="rounded-2xl bg-ink p-8 text-cream md:p-10">
-            <CountUp value={3} suffix="×" className="block font-display text-[64px] leading-none text-gold" />
-            <p className="mt-5 text-[16px] leading-[1.6] text-cream/80">the biting force used by people who grind, compared with those who don’t.</p>
-          </RevealItem>
+          {cards.map((c) => (
+            <RevealItem key={c.title} className="rounded-2xl bg-ink p-8 text-cream md:p-10">
+              <p className="eyebrow text-gold">{c.label}</p>
+              <h3 className="mt-4 font-display text-[34px] leading-[1.05] text-gold md:text-[40px]">{c.title}</h3>
+              <div className="mt-5 space-y-3 text-[16px] leading-[1.65] text-cream/80">
+                {c.body.map((p) => (
+                  <p key={p}>
+                    <Rich text={p} />
+                  </p>
+                ))}
+              </div>
+            </RevealItem>
+          ))}
         </RevealGroup>
       </div>
     </Section>

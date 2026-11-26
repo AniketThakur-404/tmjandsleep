@@ -6,6 +6,9 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { ArrowButton } from "@/components/ui-brand/arrow-button";
+import { Rich } from "@/components/rich";
+import { intro } from "@/content/tmj";
+import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -55,7 +58,7 @@ export function IntroStory() {
        * starts rising until the pin releases. (Two separate timelines driving
        * the same clip-path used to fight at the hand-off and stall mid-wipe.)
        */
-      const build = (pinUnits: number) => {
+      const build = (pinUnits: number, scrub: number | true = SMOOTH) => {
         const stageEl = stage.current!;
         const pinST = ScrollTrigger.create({
           trigger: stageEl,
@@ -70,7 +73,7 @@ export function IntroStory() {
             trigger: stageEl,
             start: "top 75%",
             end: () => pinST.end,
-            scrub: SMOOTH,
+            scrub,
             invalidateOnRefresh: true,
           },
         });
@@ -114,17 +117,18 @@ export function IntroStory() {
         gsap.set("[data-slide='2']", { autoAlpha: 1 });
         gsap.set("[data-img='2']", { clipPath: HIDDEN_LEFT });
         gsap.set("[data-panel]", { yPercent: 102 });
-        gsap.set(["[data-copy='1'] > *", "[data-copy='2'] > *"], { y: 30, autoAlpha: 0 });
 
         const P = ENTER;
-        build(PIN_MOBILE)
+        // Phones: no scrub lag (a quick swipe must never leave the panel half-animated),
+        // and the copy is always visible inside its panel — the panel's slide-in is the
+        // reveal, so the text can't arrive after the panel has already scrolled past.
+        build(PIN_MOBILE, true)
           // Entrance: image opens fully while the section rises
           .fromTo("[data-img='1']", { clipPath: HIDDEN_RIGHT }, { clipPath: SHOWN, duration: P, ease: "power1.inOut" }, 0)
           .fromTo("[data-img-inner='1']", { scale: zoom }, { scale: 1, duration: P + 0.2 }, 0)
-          // Pinned: panel rises, image shrinks above it, copy in
+          // Pinned: panel (with its copy) rises, image shrinks above it
           .fromTo("[data-panel='1']", { yPercent: 102 }, { yPercent: 0, duration: 0.5, ease: "power2.out", ...lazy }, P + 0.1)
           .fromTo("[data-img-fit='1']", { bottom: 0 }, { bottom: fit("1"), duration: 0.5, ease: "power2.out", ...lazy }, P + 0.1)
-          .fromTo("[data-copy='1'] > *", { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.05, duration: 0.3, ease: "power2.out", ...lazy }, P + 0.3)
           // hold, then swap
           .fromTo("[data-panel='1']", { yPercent: 0 }, { yPercent: 102, duration: 0.4, ease: "power2.in", ...lazy }, P + 1.25)
           .fromTo("[data-img='1']", { clipPath: SHOWN }, { clipPath: HIDDEN_UP, duration: 0.7, ease: "power2.inOut", ...lazy }, P + 1.4)
@@ -132,7 +136,6 @@ export function IntroStory() {
           .fromTo("[data-img-inner='2']", { scale: zoom }, { scale: 1, duration: 1, ...lazy }, P + 1.5)
           .fromTo("[data-panel='2']", { yPercent: 102 }, { yPercent: 0, duration: 0.5, ease: "power2.out", ...lazy }, P + 2.2)
           .fromTo("[data-img-fit='2']", { bottom: 0 }, { bottom: fit("2"), duration: 0.5, ease: "power2.out", ...lazy }, P + 2.2)
-          .fromTo("[data-copy='2'] > *", { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.05, duration: 0.3, ease: "power2.out", ...lazy }, P + 2.4)
           // hold slide 2 until the pin releases
           .set({}, {}, P + PIN_MOBILE);
       });
@@ -145,37 +148,60 @@ export function IntroStory() {
   return (
     <section ref={root} id="overview" data-tone="light" className="relative z-10">
       <div ref={stage} className="relative h-[100svh] min-h-[560px] overflow-hidden bg-[#f8f6f2] text-ink lg:min-h-[620px]">
-        <Slide n="1" imageSide="left" image={{ src: "/images/tmj-anatomy.png", alt: "TMJ anatomy", caption: "Temporomandibular Joint Anatomy" }}>
+        <Slide
+          n="1"
+          imageSide="left"
+          image={{
+            images: [
+              { src: "/images/tmj-anatomy.png", alt: "TMJ anatomy showing the temporal bone, disc, condyle and masseter muscle", w: 1231, h: 1278 },
+              { src: "/images/closed-mouth-anatomy.png", alt: "Closed mouth TMJ anatomy", w: 1536, h: 1024 },
+            ],
+            caption: "Temporomandibular Joint Anatomy",
+          }}
+        >
           <p className="font-display text-[clamp(19px,2.9vh,24px)] leading-[1.3] text-ink md:text-[30px] lg:text-[34px] [@media(max-height:760px)]:lg:text-[27px]">
-            Jaw pain, headaches and neck tension can occur together — but the cause is not always straightforward.
+            {intro.lead}
           </p>
           <p className="mt-3 text-[clamp(13.5px,1.8vh,15px)] leading-[1.6] text-ink-soft md:text-[16px] lg:mt-6 lg:leading-[1.75] [@media(max-height:760px)]:lg:mt-4 [@media(max-height:760px)]:lg:text-[14.5px]">
-            Understanding what may be contributing to your symptoms is the first step towards developing an appropriate, individualised management plan.
+            <Rich text={intro.leadMore} />
           </p>
-          {/* Hidden on phones: the copy panel would otherwise leave the image only a thin strip */}
-          <p className="mt-2.5 text-[clamp(13.5px,1.8vh,15px)] leading-[1.6] text-ink-soft max-sm:hidden md:text-[16px] lg:mt-4 lg:leading-[1.75] [@media(max-height:760px)]:lg:mt-3 [@media(max-height:760px)]:lg:text-[14.5px]">
-            At the Sydney Centre for TMJ &amp; Sleep Therapy, we assess the jaw joints, jaw muscles, teeth, head and neck symptoms and, where clinically
-            indicated, sleep and breathing factors, nutritional factors and emotional factors that may be relevant to your condition.
+          <p className="mt-2 text-[clamp(13.5px,1.8vh,15px)] leading-[1.6] text-ink-soft md:text-[16px] lg:mt-3 lg:leading-[1.75] [@media(max-height:760px)]:lg:text-[14.5px]">
+            <Rich text={intro.body} />
           </p>
           <div className="mt-5 flex flex-wrap gap-2.5 lg:mt-9 lg:gap-3 [@media(max-height:760px)]:lg:mt-6">
-            <ArrowButton href="#contact" tone="ink">How We Assess TMJ Pain</ArrowButton>
-            <ArrowButton href="#diagnosis" tone="gold">How We Diagnose</ArrowButton>
+            <ArrowButton href={site.bookingHref} tone="ink">Book a Jaw Pain Assessment</ArrowButton>
+            <ArrowButton href="#urgent-care" tone="gold">Urgent Warning Signs</ArrowButton>
           </div>
         </Slide>
 
-        <Slide n="2" imageSide="right" image={{ src: "/images/closed-mouth-anatomy.png", alt: "Closed mouth TMJ anatomy", caption: "Closed-mouth TMJ anatomy" }}>
-          <p className="eyebrow text-gold-deep">The basics</p>
-          <h2 className="display mt-2 text-[clamp(24px,3.4vh,30px)] text-ink md:text-[38px] lg:mt-4 lg:text-[46px] [@media(max-height:760px)]:lg:text-[36px]">
-            What is the <span className="text-gold-deep">temporomandibular joint (TMJ)?</span>
-          </h2>
+        <Slide
+          n="2"
+          imageSide="right"
+          image={{
+            images: [{ src: "/images/dr-manish-shah.jpg", alt: "Dr Manish Shah, dentist and medical practitioner in Sydney", w: 2460, h: 3520 }],
+            caption: "Dr Manish Shah",
+            // The photo's studio grey (sampled from its top edge) behind the header
+            portrait: { bg: "linear-gradient(to bottom, #dcdcdc, #e3e3e3)" },
+          }}
+        >
+          <p className="eyebrow text-gold-deep">Dentist &amp; medical practitioner</p>
+          <p className="display mt-2 text-[clamp(24px,3.4vh,30px)] text-ink md:text-[38px] lg:mt-4 lg:text-[46px] [@media(max-height:760px)]:lg:text-[36px]">
+            Book your <span className="text-gold-deep">jaw pain assessment</span>
+          </p>
           <p className="mt-3 text-[clamp(14.5px,2vh,16px)] leading-[1.6] text-ink md:text-[18px] lg:mt-6 lg:leading-[1.65] [@media(max-height:760px)]:lg:mt-4 [@media(max-height:760px)]:lg:text-[16px]">
-            The temporomandibular joint (TMJ) connects your lower jaw to the skull — specifically the temporal bone — just in front of each ear. It’s one of
-            the most complex and frequently used joints in the body, working every time you speak, chew, yawn or swallow.
+            {intro.doctor}
           </p>
           <p className="mt-2.5 text-[clamp(13.5px,1.8vh,15px)] leading-[1.6] text-ink-soft md:text-[16px] lg:mt-4 lg:leading-[1.75] [@media(max-height:760px)]:lg:text-[14.5px]">
-            Because it’s made up of bone, muscle, ligaments, nerves, blood vessels and a protective disc, problems can arise from any one of these
-            structures. That’s why an accurate diagnosis matters — pain in the same place can have very different causes.
+            Book online or call {site.phoneDisplay}. <strong className="font-bold text-ink">No referral needed.</strong>
           </p>
+          <div className="mt-5 flex flex-wrap gap-2.5 lg:mt-8 [@media(max-height:760px)]:lg:mt-5">
+            <ArrowButton href={site.bookingHref} tone="ink">
+              Book Online
+            </ArrowButton>
+            <ArrowButton href={site.phoneHref} tone="gold">
+              Call {site.phoneDisplay}
+            </ArrowButton>
+          </div>
         </Slide>
 
       </div>
@@ -191,25 +217,83 @@ function Slide({
 }: {
   n: "1" | "2";
   imageSide: "left" | "right";
-  image: { src: string; alt: string; caption: string };
+  image: {
+    /** w/h are the files' pixel sizes — used to give stacked diagrams equal widths */
+    images: { src: string; alt: string; w: number; h: number }[];
+    caption: string;
+    /**
+     * Portrait mode (single photo): on desktop the image column takes the photo's own
+     * width-to-height shape instead of half the screen; `bg` fills the strip behind the header.
+     */
+    portrait?: { bg: string };
+  };
   children: React.ReactNode;
 }) {
+  const img0 = image.images[0];
   return (
-    <div data-slide={n} className={cn("absolute inset-0 lg:grid lg:grid-cols-2", n === "2" && "invisible")}>
-      {/* Image: full stage on phones (shrinks above the panel), one half on desktop */}
-      <figure className={cn("absolute inset-0 lg:relative lg:h-full", imageSide === "right" && "lg:order-2")}>
+    <div
+      data-slide={n}
+      className={cn(
+        "absolute inset-0 lg:grid",
+        image.portrait ? (imageSide === "right" ? "lg:grid-cols-[minmax(0,1fr)_auto]" : "lg:grid-cols-[auto_minmax(0,1fr)]") : "lg:grid-cols-2",
+        n === "2" && "invisible",
+      )}
+    >
+      {/* Image: full stage on phones (shrinks above the panel); on desktop one half, or a photo-shaped column for portraits */}
+      <figure
+        className={cn("absolute inset-0 lg:relative lg:h-full", imageSide === "right" && "lg:order-2", image.portrait && "lg:w-(--pw)")}
+        style={
+          image.portrait
+            ? // column width = (stage height − header) × photo aspect, so the photo fits it exactly (never cropped)
+              ({ "--pw": `calc((max(100svh, 620px) - ${HEADER}px) * ${img0.w / img0.h})` } as React.CSSProperties)
+            : undefined
+        }
+      >
         <div data-img={n} className="absolute inset-0 overflow-hidden bg-white will-change-[clip-path]">
           <div data-img-fit={n} className="absolute inset-0 lg:bottom-0!">
-            <div data-img-inner={n} className="absolute inset-0 will-change-transform">
-              <Image
-                src={image.src}
-                alt={image.alt}
-                fill
-                sizes="(min-width: 1024px) 50vw, 100vw"
-                className="object-contain px-3 pt-[calc(var(--hdr)+4px)] pb-9 sm:px-5 sm:pb-11 lg:px-10 lg:pt-[calc(var(--hdr)+16px)] lg:pb-16"
+            {image.portrait ? (
+              // Portrait photo. On desktop this column is exactly the photo's shape (see the
+              // grid below), so the photo fills it edge to edge with nothing cropped or faded.
+              // The strip behind the fixed header uses the photo's own studio grey.
+              <>
+                <div aria-hidden className="absolute inset-0" style={{ background: image.portrait.bg }} />
+                <div
+                  data-img-inner={n}
+                  className="absolute inset-x-0 top-(--hdr) bottom-0 origin-top will-change-transform"
+                  style={{ "--hdr": `${HEADER}px` } as React.CSSProperties}
+                >
+                  <Image
+                    src={image.images[0].src}
+                    alt={image.images[0].alt}
+                    fill
+                    sizes="(min-width: 1024px) 40vw, 100vw"
+                    // Phones: show the whole photo, standing on the bottom edge of the strip. Desktop: the column matches the photo, so it fills it exactly.
+                    className="object-contain object-bottom lg:object-cover lg:object-top"
+                  />
+                </div>
+              </>
+            ) : (
+              <div
+                data-img-inner={n}
+                className="absolute inset-0 flex flex-row items-center justify-center gap-3 px-3 pt-[calc(var(--hdr)+4px)] pb-9 will-change-transform sm:px-5 sm:pb-11 lg:flex-col lg:gap-6 lg:px-10 lg:pt-[calc(var(--hdr)+16px)] lg:pb-16"
                 style={{ "--hdr": `${HEADER}px` } as React.CSSProperties}
-              />
-            </div>
+              >
+                {/*
+                  Diagrams: each box's share of the space is proportional to its image's
+                  shape, so every image renders at the same width when stacked (desktop)
+                  and the same height when side by side (phones).
+                */}
+                {image.images.map((img) => (
+                  <div
+                    key={img.src}
+                    className="relative h-full min-h-0 w-full min-w-0 basis-0 grow-(--row) lg:grow-(--col)"
+                    style={{ "--row": img.w / img.h, "--col": img.h / img.w } as React.CSSProperties}
+                  >
+                    <Image src={img.src} alt={img.alt} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-contain" />
+                  </div>
+                ))}
+              </div>
+            )}
             <figcaption
               className={cn(
                 "absolute bottom-0 z-10 bg-ink px-3.5 py-2 text-[10.5px] font-bold tracking-[1.6px] text-cream uppercase lg:px-4 lg:py-2.5 lg:text-[11px]",
@@ -229,6 +313,9 @@ function Slide({
           "absolute inset-x-0 bottom-0 z-10 bg-[#f8f6f2] px-6 pt-6 pb-7 shadow-[0_-24px_50px_-28px_rgba(0,0,0,0.45)] md:px-12 md:pt-9 md:pb-10",
           "lg:relative lg:inset-auto lg:flex lg:items-center lg:bg-transparent lg:px-[clamp(40px,5vw,96px)] lg:pt-[calc(88px+24px)] lg:pb-16 lg:shadow-none lg:transform-none!",
           imageSide === "right" && "lg:order-1",
+          // Beside a portrait the text column can be very wide: keep the copy block next to the
+          // photo (as on a 1024px screen) instead of floating in the middle of empty space
+          image.portrait && (imageSide === "right" ? "lg:justify-end lg:pr-[clamp(40px,5vw,96px)]" : "lg:justify-start"),
         )}
       >
         <div data-copy={n} className="max-w-[580px]">

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { byline } from "@/content/tmj";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -174,14 +175,22 @@ export function Hero() {
         {/* Heading only — the intro copy lives in the next section */}
         <div className="absolute inset-x-0 bottom-0 pb-[12vh] md:pb-[14vh]">
           <div data-hero-title className="container-site">
-            <h1 className="display max-w-[760px] text-[34px] text-white sm:text-[46px] xl:text-[58px]">
+            <h1 className="display max-w-[1080px] text-[32px] text-white sm:text-[44px] xl:text-[54px]">
               <span className="block overflow-hidden pb-[0.04em]">
-                <span data-line className="block">TMJ Pain, TMD &amp;</span>
+                <span data-line className="block">TMJ Pain, Jaw Pain and</span>
               </span>
               <span className="block overflow-hidden pb-[0.04em]">
-                <span data-line className="block text-gold">Headaches in Sydney.</span>
+                <span data-line className="block text-gold">Jaw-Related Headaches in Sydney.</span>
               </span>
             </h1>
+            <span className="mt-6 block overflow-hidden">
+              <span data-line className="block max-w-[760px] text-[12.5px] leading-[1.6] text-white/75 md:text-[13.5px]">
+                <span className="eyebrow mr-3 text-[10.5px] text-gold">Clinically reviewed</span>
+                by <strong className="font-bold text-white">{byline.reviewer.split(",")[0]}</strong>
+                {byline.reviewer.slice(byline.reviewer.indexOf(","))}
+                <span className="mt-0.5 block text-white/60">Last reviewed {byline.lastReviewed}</span>
+              </span>
+            </span>
           </div>
         </div>
 

@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { newTab } from "@/lib/site";
 
 type Props = React.ComponentProps<"a"> & {
   /** gold = primary · dark = secondary on dark panels · ink = secondary on light panels */
@@ -19,6 +20,7 @@ export function ArrowButton({ tone = "gold", icon, className, children, ...props
         tone === "ink" && "bg-ink text-cream hover:bg-black",
         className,
       )}
+      {...newTab(props.href ?? "")}
       {...props}
     >
       <span>{children}</span>

@@ -124,7 +124,8 @@ export function Loader() {
       // ---- Readiness -----------------------------------------------------
       const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
       const heroReady = new Promise<void>((resolve) => {
-        if (window.__heroReady) return resolve();
+        // Pages without the video hero have nothing to wait for
+        if (window.__heroReady || !document.querySelector("[data-hero]")) return resolve();
         window.addEventListener("hero:ready", () => resolve(), { once: true });
       });
       let cancelled = false;

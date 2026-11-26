@@ -4,48 +4,56 @@ import { useRef, type ReactNode } from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { Section } from "@/components/section";
+import { Rich } from "@/components/rich";
 
 const slides = [
   {
     image: "stress-and-jaw-pain",
     position: "80% center",
-    eyebrow: "Stress, Clenching & Persistent Pain",
-    title: <>Is stress related <br /><span className="text-gold">to TMJ pain?</span></>,
+    eyebrow: "Daytime Clenching",
+    title: <>Can stress contribute <br /><span className="text-gold">to jaw pain?</span></>,
   },
   {
     image: "jaw-clenching",
     position: "24% center",
     eyebrow: "Stress & Jaw Clenching",
-    title: "It can be.",
+    title: "Yes.",
+    body: (
+      <p>
+        <Rich text="Stress may contribute to daytime clenching and jaw bracing. Persistent pain can also disrupt sleep and mood. [19,20]" />
+      </p>
+    ),
   },
   {
     image: "pain-is-real",
     position: "77% center",
-    eyebrow: "Your Experience Matters",
-    title: "Stress does not mean that pain is “all in your head.”",
+    eyebrow: "Without you noticing",
+    title: "Concentrating, driving, or working under pressure",
+    body: (
+      <p>
+        <Rich text="These can trigger clenching or jaw bracing without you noticing. Stress and anxiety may contribute. [20]" />
+      </p>
+    ),
   },
   {
     image: "interacting-factors",
     position: "65% center",
-    eyebrow: "Sleep, Stress & Pain",
-    title: "Pain is complex.",
-    body: <p>Pain is a real biological experience influenced by many interacting factors.</p>,
+    eyebrow: "A simple habit",
+    title: "Check your jaw a few times a day.",
+    body: <p>At rest, let the muscles soften and keep your teeth slightly apart.</p>,
   },
   {
     image: "personalized-care",
     position: "76% center",
-    title: "A personalized approach",
+    title: "Support alongside treatment",
     body: (
       <>
         <p>
-          In some people, stress may increase awake clenching, muscle tension and pain sensitivity. Poor sleep, anxiety, persistent pain and
-          emotional distress can also influence one another.
+          If stress is part of the pattern, support for it can sit alongside jaw treatment{" "}
+          <span className="text-gold">
+            <Rich text="and a proper assessment of your pain. [19]" />
+          </span>
         </p>
-        <p>
-          For this reason, stress-management strategies or psychological therapies may sometimes form part of a multidisciplinary approach to
-          persistent TMD pain.
-        </p>
-        <p className="text-gold">They are not required for every patient and are recommended according to individual circumstances.</p>
       </>
     ),
   },

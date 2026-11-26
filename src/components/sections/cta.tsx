@@ -1,4 +1,4 @@
-import { Mail, MapPin, Phone } from "lucide-react";
+import { MapPin, Phone } from "lucide-react";
 import { Section } from "@/components/section";
 import { SectionHeading } from "@/components/section-heading";
 import { Reveal } from "@/components/motion/reveal";
@@ -29,44 +29,36 @@ export function Cta() {
     <Section tone="dark" id="contact">
       <ImageTrail images={TRAIL_IMAGES} />
       <div className="relative z-10 container-site">
-        <SectionHeading align="center" eyebrow="Take the First Step" title="Understand what may be" accent="contributing to your symptoms" />
+        <SectionHeading align="center" eyebrow="Take the First Step" title="Book a jaw pain" accent="assessment in Sydney" />
 
         <Reveal className="copy mx-auto mt-8 max-w-[760px] text-center">
           <p>
-            If jaw pain, headaches, facial pain or difficulty using your jaw are affecting you, an assessment can help determine whether a
-            temporomandibular disorder may be contributing.
+            If jaw pain keeps returning or changes how you eat, sleep or work, book an assessment. We will listen to the pattern, examine the relevant
+            structures and explain the next step.
           </p>
-          <p>
-            Your consultation is designed to establish the likely diagnosis, identify relevant contributing factors and determine whether further dental,
-            medical, sleep, imaging or allied-health assessment is appropriate.
-          </p>
-          <p>From there, we can discuss management options suited to your individual circumstances.</p>
-          <p className="text-[19px]! text-cream">Book a consultation with {site.practitioner} for an individual assessment of your jaw symptoms.</p>
+          <p>You can come with questions. You do not need to choose a treatment before we understand the problem.</p>
+          <p className="text-[19px]! text-cream">Book online or call {site.phoneDisplay} to book or discuss the appointment. No referral needed.</p>
         </Reveal>
 
         <Reveal delay={0.1} className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          <ArrowButton href={site.phoneHref} icon={<Phone className="size-4" />}>
+          <ArrowButton href={site.bookingHref}>Book a Jaw Pain Assessment</ArrowButton>
+          <ArrowButton href={site.phoneHref} tone="dark" icon={<Phone className="size-4" />}>
             Call {site.phoneDisplay}
           </ArrowButton>
-          <ArrowButton href={`mailto:${site.email}`} tone="dark" icon={<Mail className="size-4" />}>
-            Send an Enquiry
-          </ArrowButton>
         </Reveal>
-        <p className="mt-6 flex items-center justify-center gap-2 text-[15px] text-cream/75">
-          <MapPin className="size-4 text-gold" />
-          {site.address.join(" ")}
+        <p className="mx-auto mt-6 flex max-w-[640px] items-start justify-center gap-2 text-center text-[15px] leading-[1.6] text-cream/75">
+          <MapPin className="mt-1 size-4 shrink-0 text-gold" />
+          <span>
+            Sydney Centre for TMJ and Sleep Therapy, {site.address.join(", ")}. Monday to Friday, 9 am to 5 pm.
+          </span>
         </p>
 
         <Reveal data-trail-off className="mx-auto mt-16 max-w-[860px] rounded-2xl bg-panel p-8 text-center ring-1 ring-cream/10 md:p-10">
-          <h2 className="display text-[28px] text-cream md:text-[34px]">Important information</h2>
+          <h3 className="display text-[28px] text-cream md:text-[34px]">Important information</h3>
           <div className="copy mt-4">
             <p>
-              The information on this website is general in nature and is not intended to replace individual medical or dental advice, diagnosis or
-              treatment.
-            </p>
-            <p>
-              Recommendations vary according to each person’s history, examination findings, diagnosis and individual circumstances. Where appropriate,
-              referral to another healthcare professional may be recommended.
+              This page provides general information and does not replace an individual assessment. Treatment suitability, benefits, risks and costs
+              vary.
             </p>
           </div>
         </Reveal>

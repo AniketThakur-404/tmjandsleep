@@ -11,9 +11,10 @@ const didone = Antic_Didone({ subsets: ["latin"], weight: "400", variable: "--fo
 const lato = Lato({ subsets: ["latin"], weight: ["300", "400", "700"], variable: "--font-lato", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "TMJ Pain, TMD & Headaches in Sydney | Sydney Centre for TMJ & Sleep Therapy",
+  metadataBase: new URL("https://www.tmjandsleep.com.au"),
+  title: { default: "Sydney Centre for TMJ & Sleep Therapy", template: "%s | Sydney Centre for TMJ & Sleep Therapy" },
   description:
-    "Jaw pain, headaches and neck tension can occur together. Individualised assessment and management of TMJ pain, TMD and headaches in Sydney.",
+    "Jaw pain, TMJ, teeth grinding, snoring and sleep apnoea care in Sydney CBD with Dr Manish Shah, dentist and medical practitioner. No referral needed.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

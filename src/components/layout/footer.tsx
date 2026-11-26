@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { Clock, MapPin, Phone } from "lucide-react";
-import { footerNav, site } from "@/lib/site";
+import { footerNav, LIVE, newTab, site } from "@/lib/site";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -16,7 +16,7 @@ export function Footer() {
       {/* Brand + link columns on one row */}
       <div className="container-site grid gap-10 pt-12 md:pt-14 lg:grid-cols-[1.25fr_2fr] lg:gap-16">
         <div>
-          <Link href="/" aria-label={site.name} className="inline-block">
+          <Link href={`${LIVE}/`} {...newTab(LIVE)} aria-label={site.name} className="inline-block">
             <Image src="/images/logo.png" alt="TMJ & Sleep Therapy logo" width={170} height={65} className="h-[60px] w-auto" />
           </Link>
           <p className="mt-4 max-w-[380px] text-[14.5px] leading-[1.65] text-ink-soft">
@@ -46,12 +46,13 @@ export function Footer() {
               <p className="text-[15.5px] font-bold text-ink">{heading}</p>
               <ul className="mt-3 space-y-1.5">
                 {links.map((l) => (
-                  <li key={l}>
+                  <li key={l.label}>
                     <Link
-                      href="#"
+                      href={l.href}
+                      {...newTab(l.href)}
                       className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-0.5 text-[14px] text-ink-soft transition-[background-size,color] duration-500 hover:bg-[length:100%_1px] hover:text-ink"
                     >
-                      {l}
+                      {l.label}
                     </Link>
                   </li>
                 ))}
