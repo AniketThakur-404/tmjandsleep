@@ -25,7 +25,7 @@ import { Section } from "@/components/section";
 import { SectionHeading } from "@/components/section-heading";
 import { Reveal } from "@/components/motion/reveal";
 import { Rich } from "@/components/rich";
-import { StackCards } from "@/components/stack-cards";
+import { CardCarousel } from "@/components/stack-cards";
 import { manageAreas, whyChoose } from "@/content/tmj";
 import { cn } from "@/lib/utils";
 
@@ -557,7 +557,6 @@ function MobileArchive({ steps, areaStart }: { steps: Step[]; areaStart: number[
   );
 }
 
-/** "Why Choose Sydney Centre for TMJ and Sleep Therapy in Sydney CBD?" — closes the treatment section, as stacking cards. */
 function WhyChoose() {
   return (
     <div className="container-site pt-24 pb-24 md:pt-32 md:pb-32">
@@ -570,8 +569,7 @@ function WhyChoose() {
         </Reveal>
       </div>
 
-      {/* One column of stacking cards (same component as "Other causes") */}
-      <StackCards items={whyChoose} tone="dark" className="mt-12" />
+      <CardCarousel items={whyChoose} tone="dark" className="mt-12" />
     </div>
   );
 }

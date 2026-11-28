@@ -1,5 +1,8 @@
+"use client";
+
 import { Fragment, type ReactNode } from "react";
 import Link from "next/link";
+import { useLenis } from "lenis/react";
 
 /**
  * Matches, in copy text:
@@ -16,6 +19,7 @@ const LINK_CLS = "font-bold underline decoration-current/35 underline-offset-4 t
  * "[label](href)" into links.
  */
 export function Rich({ text }: { text: string }) {
+  const lenis = useLenis();
   const out: ReactNode[] = [];
   let last = 0;
   for (const m of text.matchAll(TOKEN)) {
@@ -38,12 +42,24 @@ export function Rich({ text }: { text: string }) {
     } else {
       const nums = m[3].split(",").map((n) => n.trim());
       out.push(
-        <sup key={at} className="ml-[0.2em] text-[0.68em] leading-none font-bold whitespace-nowrap opacity-60">
+        <sup key={at} className="ml-[0.2em] text-[0.68em] leading-none font-bold whitespace-nowrap text-gold-deep">
           [
           {nums.map((n, i) => (
             <Fragment key={n}>
               {i > 0 && ","}
-              <a href={`#ref-${n}`} className="underline-offset-2 hover:underline hover:opacity-100" aria-label={`Reference ${n}`}>
+              <a
+                href={`#ref-${n}`}
+                onClick={(e) => {
+                  const el = document.getElementById(`ref-${n}`);
+                  if (el && lenis) {
+                    e.preventDefault();
+                    window.location.hash = `ref-${n}`;
+                    lenis.scrollTo(el, { offset: -128, duration: 1.1 });
+                  }
+                }}
+                className="underline decoration-gold-deep/45 underline-offset-2 transition-colors hover:text-ink hover:decoration-current"
+                aria-label={`Reference ${n}`}
+              >
                 {n}
               </a>
             </Fragment>

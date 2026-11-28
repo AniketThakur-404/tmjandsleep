@@ -98,6 +98,7 @@ export const signs = [
   {
     title: "Jaw clicking and locking",
     image: "/images/jaw-noises.png",
+    fit: "contain" as const,
     body: [
       "A painless click is common and usually needs no treatment.",
       "A painful click, new locking or reduced movement deserves attention. Avoid repeatedly opening wide to test it. [1]",
