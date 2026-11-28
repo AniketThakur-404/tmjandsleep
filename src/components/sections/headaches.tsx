@@ -54,10 +54,10 @@ export function Headaches() {
 
         <RevealGroup className="mt-16 grid gap-5 md:grid-cols-2">
           {cards.map((c) => (
-            <RevealItem key={c.title} className="rounded-2xl bg-ink p-8 text-cream md:p-10">
+            <RevealItem key={c.title} className="rounded-2xl bg-ink p-6 text-cream sm:p-8 md:p-10">
               <p className="eyebrow text-gold">{c.label}</p>
-              <h3 className="mt-4 font-display text-[34px] leading-[1.05] text-gold md:text-[40px]">{c.title}</h3>
-              <div className="mt-5 space-y-3 text-[16px] leading-[1.65] text-cream/80">
+              <h3 className="type-h3 mt-4 font-display leading-[1.1] text-gold">{c.title}</h3>
+              <div className="type-body mt-5 space-y-3 text-cream/80">
                 {c.body.map((p) => (
                   <p key={p}>
                     <Rich text={p} />

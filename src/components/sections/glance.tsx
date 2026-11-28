@@ -32,7 +32,7 @@ export function Glance() {
           <Reveal>
             <ul className="divide-y divide-ink/10 border-y border-ink/10">
               {glance.map((g) => (
-                <li key={g} className="flex gap-4 py-4 text-[17px] leading-[1.55] text-ink">
+                <li key={g} className="type-body flex gap-4 py-4 text-ink">
                   <span aria-hidden className="mt-[0.75em] h-px w-5 shrink-0 bg-gold-deep" />
                   <span>
                     <Rich text={g} />
@@ -44,7 +44,7 @@ export function Glance() {
 
           <Reveal className="mt-8 flex gap-4 rounded-2xl bg-paper p-6 ring-1 ring-gold-deep/35">
             <TriangleAlert className="mt-0.5 size-5 shrink-0 text-gold-deep" strokeWidth={1.75} />
-            <p className="text-[16px] leading-[1.7] text-ink">
+            <p className="type-body text-ink">
               Sudden or severe symptoms need a different response.{" "}
               <a href="#urgent-care" className="font-bold underline decoration-gold-deep/50 underline-offset-4 hover:decoration-gold-deep">
                 Read the warning signs below

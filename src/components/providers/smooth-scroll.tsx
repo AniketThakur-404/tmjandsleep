@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ReactLenis, type LenisRef } from "lenis/react";
+import { ReactLenis, useLenis, type LenisRef } from "lenis/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -18,14 +18,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     const update = (time: number) => lenisRef.current?.lenis?.raf(time * 1000);
     gsap.ticker.add(update);
     gsap.ticker.lagSmoothing(0);
-
-    const lenis = lenisRef.current?.lenis;
-    lenis?.on("scroll", ScrollTrigger.update);
-
-    return () => {
-      gsap.ticker.remove(update);
-      lenis?.off("scroll", ScrollTrigger.update);
-    };
+    return () => gsap.ticker.remove(update);
   }, []);
 
   return (
@@ -39,7 +32,17 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
         anchors: { offset: -100 },
       }}
     >
+      <ScrollTriggerSync />
       {children}
     </ReactLenis>
   );
+}
+
+/**
+ * ReactLenis creates its instance in its own effect, after the provider's
+ * effect has run, so subscribe through the context hook instead of the ref.
+ */
+function ScrollTriggerSync() {
+  useLenis(ScrollTrigger.update);
+  return null;
 }

@@ -25,7 +25,7 @@ export function Author() {
                 />
               </div>
               <figcaption className="px-6 py-5">
-                <p className="font-display text-[22px] text-ink">Dr Manish Shah</p>
+                <p className="type-h4 font-display text-ink">Dr Manish Shah</p>
                 <p className="eyebrow mt-1 text-[11px] text-gold-deep">BDS (Hons), MBBS, MMed (Sleep Medicine)</p>
               </figcaption>
             </figure>
@@ -34,7 +34,7 @@ export function Author() {
           <div>
             <SectionHeading tone="light" eyebrow="Clinically reviewed" title="About the" accent="author" />
             <Reveal className="copy mt-8">
-              <p className="text-[18px]! text-ink">
+              <p className="type-lead text-ink">
                 Dr Manish Shah holds BDS (Hons), MBBS and MMed (Sleep Medicine) qualifications. He graduated in dentistry with honours from the University of
                 Sydney in 1998 and completed his medical degree in 2005.
               </p>
@@ -45,7 +45,7 @@ export function Author() {
               </p>
             </Reveal>
 
-            <Reveal className="mt-8 rounded-lg border-l-2 border-gold-deep bg-paper px-6 py-5 text-[14.5px] leading-[1.7] text-ink-soft">
+            <Reveal className="mt-8 rounded-lg border-l-2 border-gold-deep bg-paper type-note px-6 py-5 text-ink-soft">
               Clinically reviewed by {byline.reviewer}, at {byline.where}. AHPRA registration: {byline.ahpra}.{" "}
               <strong className="font-bold text-ink">Last reviewed: {byline.lastReviewed}.</strong>
             </Reveal>
@@ -55,7 +55,7 @@ export function Author() {
         {/* References */}
         <Reveal className="mt-20 border-t border-ink/10 pt-12">
           <h2 className="eyebrow text-gold-deep">References</h2>
-          <ol className="mt-6 grid gap-x-12 gap-y-3 text-[13.5px] leading-[1.6] text-ink-soft md:grid-cols-2">
+          <ol className="mt-6 grid gap-x-12 gap-y-3 type-fine text-ink-soft md:grid-cols-2">
             {references.map((r, i) => (
               <li key={r.text} id={`ref-${i + 1}`} className="flex scroll-mt-32 gap-3 rounded-md target:bg-gold/20">
                 <span className="w-6 shrink-0 text-right font-bold text-ink tabular-nums">{i + 1}.</span>

@@ -14,7 +14,7 @@ export function RuleOut() {
           <SectionHeading eyebrow="Rule out other causes" title="Other causes of" accent="jaw and facial pain" />
 
           <Reveal className="copy lg:pt-9">
-            <p className="text-[18px]! text-cream">A painful jaw can have more than one explanation.</p>
+            <p className="type-lead text-cream">A painful jaw can have more than one explanation.</p>
             <p>
               <Rich text="A tooth problem and migraine, for example, may need separate treatment. Tell your clinician what previous care helped, what changed and what stayed the same. [1,7]" />
             </p>

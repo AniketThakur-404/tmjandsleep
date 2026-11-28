@@ -20,7 +20,7 @@ export function Neck() {
           <Reveal className="mt-10">
             <h3 className="eyebrow text-gold">Jaw-related headaches</h3>
             <div className="copy mt-4">
-              <p className="text-[18px]! text-cream">
+              <p className="type-lead text-cream">
                 <Rich text="A temple headache that worsens with chewing or clenching may have a jaw contribution. The diagnosis needs a clear relationship between the headache and the jaw disorder, supported by the history and examination. [10]" />
               </p>
               <p>

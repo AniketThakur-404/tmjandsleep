@@ -13,6 +13,10 @@ import { signs, symptomList } from "@/content/tmj";
 import { cn } from "@/lib/utils";
 
 const TRANSITION_MS = 450;
+/** Scroll distance (in svh) that each slide occupies while the panel is docked. */
+const SLIDE_SCROLL_SVH = 60;
+/** Wheel silence that ends one gesture (mouse notch burst or trackpad momentum). */
+const GESTURE_GAP_MS = 180;
 
 export function Signs() {
   return (
@@ -32,7 +36,7 @@ export function Signs() {
           </p>
           <ul className="mt-3 divide-y divide-ink/10 border-y border-ink/10">
             {symptomList.map((s) => (
-              <li key={s} className="flex gap-3.5 py-2.5 text-[15.5px] leading-[1.55] text-ink">
+              <li key={s} className="type-body flex gap-3.5 py-2.5 text-ink">
                 <span aria-hidden className="mt-[0.75em] h-px w-4 shrink-0 bg-gold-deep" />
                 {s}
               </li>
@@ -47,8 +51,10 @@ export function Signs() {
 }
 
 function ScrollAdventure() {
+  const track = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const current = useRef(0);
+  const goTo = useRef<(index: number) => void>(() => {});
   const [active, setActive] = useState(0);
   const lenis = useLenis();
 
@@ -59,103 +65,167 @@ function ScrollAdventure() {
   }, []);
 
   useEffect(() => {
+    const rail = track.current!;
     const panel = stage.current!;
     const phone = window.matchMedia("(width < 40rem)");
+    const last = signs.length - 1;
+
+    /*
+     * Tablet / desktop: the panel is sticky inside a taller track, and the
+     * scroll position inside that track decides which slide is shown. Because
+     * the panel does not move while docked, wheel input can jump between slide
+     * positions instantly; touch, keyboard and the scrollbar simply scroll
+     * through the same positions.
+     */
+    const geometry = () => {
+      const dock = parseFloat(panel.style.top) || 0;
+      const start = rail.getBoundingClientRect().top + window.scrollY - dock;
+      const step = Math.max(1, (rail.offsetHeight - panel.offsetHeight) / last);
+      return { start, step, end: start + step * last };
+    };
+    const indexAt = (y: number) => {
+      const { start, step } = geometry();
+      return Math.min(last, Math.max(0, Math.round((y - start) / step)));
+    };
+    // Where the page is heading: Lenis' target while it is gliding.
+    const heading = () => lenis?.targetScroll ?? window.scrollY;
+    const isDocked = (y: number) => {
+      const { start, end } = geometry();
+      return y >= start - 1 && y <= end + 1;
+    };
+
+    // While a button-triggered glide crosses the track, keep showing its target slide.
+    let pinned: number | null = null;
+    let pinTimer = 0;
+    const sync = () => {
+      if (!phone.matches && pinned === null) select(indexAt(window.scrollY));
+    };
+
     // A tall slide scrolls with the document until its last paragraph is visible.
     const positionStage = () => {
       panel.style.top = `${Math.min(HEADER_HEIGHT, window.innerHeight - panel.offsetHeight)}px`;
+      sync();
     };
     positionStage();
     const observer = new ResizeObserver(positionStage);
     observer.observe(panel);
     window.addEventListener("resize", positionStage);
-    const isDocked = () => Math.abs(panel.getBoundingClientRect().top - parseFloat(panel.style.top)) <= 1;
-    const canStep = (direction: number) => current.current + direction >= 0 && current.current + direction < signs.length;
+    window.addEventListener("scroll", sync, { passive: true });
 
-    function step(event: Event, direction: number) {
-      if (phone.matches || !canStep(direction)) return false;
-      const rect = panel.getBoundingClientRect();
-      const dockTop = parseFloat(panel.style.top);
-      if (!isDocked()) {
-        // Catch the approach while the slide is in view, including fast wheel input.
-        if (Math.abs(rect.top - dockTop) > (innerHeight - HEADER_HEIGHT) * 0.35) return false;
-        if ((rect.top - dockTop) * direction < 0) return false;
-      }
-      if (event.cancelable) event.preventDefault();
-      event.stopImmediatePropagation();
-      const y = window.scrollY + rect.top - dockTop;
+    const jump = (y: number) => {
       if (lenis) lenis.scrollTo(y, { immediate: true, force: true });
       else window.scrollTo({ top: y, behavior: "instant" });
-      select(current.current + direction);
-      return true;
-    }
-
-    let lastWheelTime = -Infinity;
-    let lastStepTime = -Infinity;
-    let lastDelta = 0;
-    let consumedWheel = false;
-    function onWheel(event: WheelEvent) {
-      if (phone.matches || event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-      const now = performance.now();
-      const delta = event.deltaY;
-      // Zoom and OS wheel settings can make individual notches small or fractional.
-      const gap = now - lastWheelTime;
-      const magnitude = Math.abs(delta);
-      const repeatNotch = magnitude >= 1 && Math.abs(delta - lastDelta) < 0.01 && gap >= 45;
-      const freshPush = now - lastStepTime >= TRANSITION_MS && magnitude >= 4 &&
-        (magnitude > Math.abs(lastDelta) * 1.5 || (delta === lastDelta && magnitude >= 16));
-      if (event.deltaMode !== 0 || repeatNotch || freshPush || gap > 140 ||
-          Math.sign(delta) !== Math.sign(lastDelta) || !isDocked()) consumedWheel = false;
-      lastWheelTime = now;
-      lastDelta = delta;
-      if (!canStep(Math.sign(delta))) {
-        // Let a sustained wheel scroll leave the first or last slide.
-        if (now - lastStepTime >= TRANSITION_MS) consumedWheel = false;
+    };
+    const glide = (y: number, onComplete?: () => void) => {
+      if (lenis) lenis.scrollTo(y, { onComplete });
+      else {
+        window.scrollTo({ top: y, behavior: "smooth" });
+        onComplete?.();
       }
-      if (consumedWheel) {
-        if (event.cancelable) event.preventDefault();
-        event.stopImmediatePropagation();
+    };
+
+    goTo.current = (index) => {
+      if (phone.matches) return select(index);
+      const { start, step } = geometry();
+      const y = start + step * index;
+      if (isDocked(window.scrollY)) return jump(y);
+      // Approaching from outside: glide in, showing the chosen slide throughout.
+      select(index);
+      pinned = index;
+      const release = () => {
+        window.clearTimeout(pinTimer);
+        pinned = null;
+        sync();
+      };
+      pinTimer = window.setTimeout(release, 1500);
+      glide(y, release);
+    };
+
+    const consume = (event: Event) => {
+      if (event.cancelable) event.preventDefault();
+      // Keep Lenis (listening on window, bubble phase) from also scrolling the page.
+      event.stopImmediatePropagation();
+    };
+
+    /*
+     * One wheel gesture moves exactly one slide. A mouse "gesture" is a burst
+     * of notches; a trackpad gesture includes its momentum tail. A new gesture
+     * starts after a pause, a direction change, or a fresh push that clearly
+     * outgrows the decaying momentum.
+     */
+    let engaged = false;
+    let lastWheel = -Infinity;
+    let lastStep = -Infinity;
+    let lastMagnitude = 0;
+    let lastDirection = 0;
+    function onWheel(event: WheelEvent) {
+      if (phone.matches || event.ctrlKey || lenis?.isStopped) return;
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      const now = performance.now();
+      const direction = Math.sign(event.deltaY);
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
+      const magnitude = Math.abs(event.deltaY) * unit;
+      if (now - lastWheel > GESTURE_GAP_MS || direction !== lastDirection ||
+          (magnitude >= 10 && magnitude > lastMagnitude * 2)) engaged = false;
+      lastWheel = now;
+      lastMagnitude = magnitude;
+      lastDirection = direction;
+
+      if (engaged) return consume(event);
+
+      const { start, step, end } = geometry();
+      const from = heading();
+      const to = from + direction * magnitude;
+
+      // Entering the track: stop on its first (or last) slide instead of letting
+      // smooth-scroll momentum carry the page through it.
+      if ((direction > 0 && from < start - 1 && to >= start - 1) ||
+          (direction < 0 && from > end + 1 && to <= end + 1)) {
+        consume(event);
+        engaged = true;
+        lastStep = now;
+        glide(direction > 0 ? start : end);
         return;
       }
-      consumedWheel = step(event, Math.sign(delta));
-      if (consumedWheel) lastStepTime = now;
+
+      if (from < start - 1 || from > end + 1) return;
+      const next = Math.min(last, Math.max(0, Math.round((from - start) / step))) + direction;
+      // Past the first or last slide, a new gesture scrolls the page on.
+      if (next < 0 || next > last) return;
+      consume(event);
+      // A push that lands mid-transition is absorbed whole, momentum tail included.
+      engaged = true;
+      if (now - lastStep < TRANSITION_MS) return;
+      lastStep = now;
+      jump(start + step * next);
     }
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
           (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable], [role=dialog], nav"))) return;
-      if (phone.matches && panel.contains(document.activeElement) && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
-        const direction = event.key === "ArrowLeft" ? -1 : 1;
-        event.preventDefault();
-        if (canStep(direction)) select(current.current + direction);
+      if (phone.matches) {
+        if (panel.contains(document.activeElement) && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+          const next = current.current + (event.key === "ArrowLeft" ? -1 : 1);
+          event.preventDefault();
+          if (next >= 0 && next <= last) select(next);
+        }
         return;
       }
-      if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-        step(event, event.key === "ArrowUp" ? -1 : 1);
-      }
+      const direction = event.key === "ArrowDown" || event.key === "PageDown" ? 1
+        : event.key === "ArrowUp" || event.key === "PageUp" ? -1 : 0;
+      if (!direction || !isDocked(heading())) return;
+      const next = indexAt(heading()) + direction;
+      if (next < 0 || next > last) return;
+      event.preventDefault();
+      const { start, step } = geometry();
+      jump(start + step * next);
     }
 
+    // Phone: the slides are a horizontal carousel instead.
     let touchStart: Touch | null = null;
-    let touchConsumed = false;
     function onTouchStart(event: TouchEvent) {
-      touchStart = event.touches.length === 1 && (phone.matches || isDocked()) ? event.touches[0] : null;
-      touchConsumed = false;
+      touchStart = phone.matches && event.touches.length === 1 ? event.touches[0] : null;
     }
-    function onTouchMove(event: TouchEvent) {
-      if (phone.matches || !touchStart || event.touches.length !== 1) return;
-      if (touchConsumed) {
-        if (event.cancelable) event.preventDefault();
-        return;
-      }
-      const touch = event.touches[0];
-      const delta = touchStart.clientY - touch.clientY;
-      const direction = Math.sign(delta);
-      if (Math.abs(delta) <= Math.abs(touchStart.clientX - touch.clientX)) return;
-      if (!canStep(direction)) return;
-      if (event.cancelable) event.preventDefault();
-      if (Math.abs(delta) >= 40) touchConsumed = step(event, direction);
-    }
-
     function onTouchEnd(event: TouchEvent) {
       if (!phone.matches || !touchStart || event.touches.length) return;
       const touch = event.changedTouches[0];
@@ -163,27 +233,32 @@ function ScrollAdventure() {
       const dy = touch.clientY - touchStart.clientY;
       touchStart = null;
       if (Math.abs(dx) < 48 || Math.abs(dx) < 1.5 * Math.abs(dy)) return;
-      const direction = dx < 0 ? 1 : -1;
-      if (canStep(direction)) select(current.current + direction);
+      const next = current.current + (dx < 0 ? 1 : -1);
+      if (next >= 0 && next <= last) select(next);
     }
-    panel.addEventListener("touchend", onTouchEnd);
+
     window.addEventListener("wheel", onWheel, { capture: true, passive: false });
     window.addEventListener("keydown", onKeyDown);
     panel.addEventListener("touchstart", onTouchStart, { passive: true });
-    panel.addEventListener("touchmove", onTouchMove, { passive: false });
+    panel.addEventListener("touchend", onTouchEnd);
     return () => {
-      panel.removeEventListener("touchend", onTouchEnd);
+      window.clearTimeout(pinTimer);
       observer.disconnect();
       window.removeEventListener("resize", positionStage);
+      window.removeEventListener("scroll", sync);
       window.removeEventListener("wheel", onWheel, true);
       window.removeEventListener("keydown", onKeyDown);
       panel.removeEventListener("touchstart", onTouchStart);
-      panel.removeEventListener("touchmove", onTouchMove);
+      panel.removeEventListener("touchend", onTouchEnd);
     };
   }, [lenis, select]);
 
   return (
-    <div className="mt-12 [overflow-anchor:none] sm:after:block sm:after:h-[35svh] md:mt-16">
+    <div
+      ref={track}
+      className="mt-12 [overflow-anchor:none] sm:after:block sm:after:h-(--track) md:mt-16"
+      style={{ "--track": `${(signs.length - 1) * SLIDE_SCROLL_SVH}svh` } as React.CSSProperties}
+    >
       <div
         ref={stage}
         data-symptom-adventure
@@ -247,8 +322,8 @@ function ScrollAdventure() {
                 >
                   <div className="mx-auto flex min-h-full max-w-[44rem] flex-col justify-center p-5 sm:p-5 lg:px-8 lg:py-5">
                     <p className="eyebrow text-gold-deep">{String(index + 1).padStart(2, "0")}</p>
-                    <h3 className="mt-2 text-[clamp(1.125rem,2.6vw,2.75rem)] leading-[1.12] text-ink uppercase max-sm:text-[24px]">{sign.title}</h3>
-                    <div className="mt-3 space-y-2.5 text-base leading-[1.6] text-ink-soft md:text-[15px]">
+                    <h3 className="type-h3 mt-2 leading-[1.12] text-ink uppercase">{sign.title}</h3>
+                    <div className="type-body mt-3 space-y-2.5 text-ink-soft">
                       {sign.body.map((paragraph) => <p key={paragraph}><Rich text={paragraph} /></p>)}
                     </div>
                   </div>
@@ -269,7 +344,7 @@ function ScrollAdventure() {
                 type="button"
                 aria-label={sign.title}
                 aria-current={active === index ? "step" : undefined}
-                onClick={() => select(index)}
+                onClick={() => goTo.current(index)}
                 className="size-11 sm:size-9 cursor-pointer rounded-full text-xs font-bold text-ink/65 transition-colors hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 aria-[current=step]:bg-gold aria-[current=step]:text-ink"
               >
                 {String(index + 1).padStart(2, "0")}

@@ -18,11 +18,10 @@ const HEADER = 88;
 /**
  * Timeline units = screen heights of scroll.
  * ENTER: the section rises from 75% of the viewport to the top (not pinned).
- * PIN / PIN_MOBILE: how long it then stays pinned (hold → swap → hold).
+ * PIN: how long it then stays pinned (hold → swap → hold).
  */
 const ENTER = 0.75;
 const PIN = 3.5;
-const PIN_MOBILE = 3.8;
 /**
  * Seconds the animation trails the scroll position. Kept short — Lenis
  * already smooths the scroll, and a long lag on top of it feels stuck.
@@ -42,7 +41,7 @@ const HIDDEN_UP = "inset(0% 0% 100% 0%)"; // collapsed to its top edge
  *    open left → right across its whole half; the copy rises in.
  *  - Pinned: slide 1's image wipes away upward while slide 2's image wipes
  *    open right → left across the other half; its copy rises in.
- * Mobile: slides stack; each image wipes open as it enters.
+ * Below 1024px: slides stack in normal flow; each image wipes open as it enters.
  */
 export function IntroStory() {
   const root = useRef<HTMLElement>(null);
@@ -104,40 +103,19 @@ export function IntroStory() {
           .set({}, {}, P + PIN);
       });
 
-      // ---------------- Mobile / tablet: same pinned sequence ----------------
-      // Image wipes open full-screen, then the copy panel rises from the bottom
-      // while the image shrinks into the space above it.
+      // ---------------- Mobile / tablet: stacked, not pinned ----------------
+      // Each slide is image-then-copy in normal flow, so the diagrams always get
+      // a full-width, readable size. Each plays its wipe once as it scrolls in.
       mm.add("(max-width: 1023px)", () => {
-        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        const zoom = reduce ? 1 : 1.15;
-        const stageEl = stage.current!;
-        // The image's frame shrinks to the band above the panel, so the picture refits into it
-        const fit = (n: "1" | "2") => () => `${stageEl.querySelector<HTMLElement>(`[data-panel='${n}']`)!.offsetHeight}px`;
-
-        gsap.set("[data-slide='2']", { autoAlpha: 1 });
-        gsap.set("[data-img='2']", { clipPath: HIDDEN_LEFT });
-        gsap.set("[data-panel]", { yPercent: 102 });
-
-        const P = ENTER;
-        // Phones: no scrub lag (a quick swipe must never leave the panel half-animated),
-        // and the copy is always visible inside its panel — the panel's slide-in is the
-        // reveal, so the text can't arrive after the panel has already scrolled past.
-        build(PIN_MOBILE, true)
-          // Entrance: image opens fully while the section rises
-          .fromTo("[data-img='1']", { clipPath: HIDDEN_RIGHT }, { clipPath: SHOWN, duration: P, ease: "power1.inOut" }, 0)
-          .fromTo("[data-img-inner='1']", { scale: zoom }, { scale: 1, duration: P + 0.2 }, 0)
-          // Pinned: panel (with its copy) rises, image shrinks above it
-          .fromTo("[data-panel='1']", { yPercent: 102 }, { yPercent: 0, duration: 0.5, ease: "power2.out", ...lazy }, P + 0.1)
-          .fromTo("[data-img-fit='1']", { bottom: 0 }, { bottom: fit("1"), duration: 0.5, ease: "power2.out", ...lazy }, P + 0.1)
-          // hold, then swap
-          .fromTo("[data-panel='1']", { yPercent: 0 }, { yPercent: 102, duration: 0.4, ease: "power2.in", ...lazy }, P + 1.25)
-          .fromTo("[data-img='1']", { clipPath: SHOWN }, { clipPath: HIDDEN_UP, duration: 0.7, ease: "power2.inOut", ...lazy }, P + 1.4)
-          .fromTo("[data-img='2']", { clipPath: HIDDEN_LEFT }, { clipPath: SHOWN, duration: 0.8, ease: "power2.inOut", ...lazy }, P + 1.5)
-          .fromTo("[data-img-inner='2']", { scale: zoom }, { scale: 1, duration: 1, ...lazy }, P + 1.5)
-          .fromTo("[data-panel='2']", { yPercent: 102 }, { yPercent: 0, duration: 0.5, ease: "power2.out", ...lazy }, P + 2.2)
-          .fromTo("[data-img-fit='2']", { bottom: 0 }, { bottom: fit("2"), duration: 0.5, ease: "power2.out", ...lazy }, P + 2.2)
-          // hold slide 2 until the pin releases
-          .set({}, {}, P + PIN_MOBILE);
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        root.current!.querySelectorAll<HTMLElement>("[data-slide]").forEach((slide) => {
+          const n = slide.dataset.slide;
+          gsap
+            .timeline({ scrollTrigger: { trigger: slide, start: "top 80%", once: true } })
+            .fromTo(`[data-img='${n}']`, { clipPath: n === "1" ? HIDDEN_RIGHT : HIDDEN_LEFT }, { clipPath: SHOWN, duration: 1.1, ease: "power2.inOut" }, 0)
+            .fromTo(`[data-img-inner='${n}']`, { scale: 1.12 }, { scale: 1, duration: 1.4, ease: "power2.out" }, 0)
+            .fromTo(`[data-copy='${n}'] > *`, { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.08, duration: 0.7, ease: "power2.out" }, 0.35);
+        });
       });
 
       return () => mm.revert();
@@ -147,7 +125,7 @@ export function IntroStory() {
 
   return (
     <section ref={root} id="overview" data-tone="light" className="relative z-10">
-      <div ref={stage} className="relative h-[100svh] min-h-[560px] overflow-hidden bg-[#f8f6f2] text-ink lg:min-h-[620px]">
+      <div ref={stage} className="relative overflow-hidden bg-[#f8f6f2] text-ink lg:h-[100svh] lg:min-h-[620px]">
         <Slide
           n="1"
           imageSide="left"
@@ -159,16 +137,15 @@ export function IntroStory() {
             caption: "Temporomandibular Joint Anatomy",
           }}
         >
-          <p className="font-display text-[clamp(19px,2.9vh,24px)] leading-[1.3] text-ink md:text-[30px] lg:text-[34px] [@media(max-height:760px)]:lg:text-[27px]">
-            {intro.lead}
-          </p>
-          <p className="mt-3 text-[clamp(13.5px,1.8vh,15px)] leading-[1.6] text-ink-soft md:text-[16px] lg:mt-6 lg:leading-[1.75] [@media(max-height:760px)]:lg:mt-4 [@media(max-height:760px)]:lg:text-[14.5px]">
+          {/* Short laptop screens (≤760px tall) step the pinned slide's type down one notch so it fits */}
+          <p className="type-h3 font-display leading-[1.3] text-ink [@media(max-height:760px)]:lg:text-[27px]">{intro.lead}</p>
+          <p className="type-body mt-5 text-ink-soft lg:mt-6 [@media(max-height:760px)]:lg:mt-4 [@media(max-height:760px)]:lg:text-[15px]">
             <Rich text={intro.leadMore} />
           </p>
-          <p className="mt-2 text-[clamp(13.5px,1.8vh,15px)] leading-[1.6] text-ink-soft md:text-[16px] lg:mt-3 lg:leading-[1.75] [@media(max-height:760px)]:lg:text-[14.5px]">
+          <p className="type-body mt-3 text-ink-soft [@media(max-height:760px)]:lg:text-[15px]">
             <Rich text={intro.body} />
           </p>
-          <div className="mt-5 flex flex-wrap gap-2.5 lg:mt-9 lg:gap-3 [@media(max-height:760px)]:lg:mt-6">
+          <div className="mt-7 flex flex-wrap gap-2.5 lg:mt-9 lg:gap-3 [@media(max-height:760px)]:lg:mt-6">
             <ArrowButton href={site.bookingHref} tone="ink">Book a Jaw Pain Assessment</ArrowButton>
             <ArrowButton href="#urgent-care" tone="gold">Urgent Warning Signs</ArrowButton>
           </div>
@@ -185,16 +162,14 @@ export function IntroStory() {
           }}
         >
           <p className="eyebrow text-gold-deep">Dentist &amp; medical practitioner</p>
-          <p className="display mt-2 text-[clamp(24px,3.4vh,30px)] text-ink md:text-[38px] lg:mt-4 lg:text-[46px] [@media(max-height:760px)]:lg:text-[36px]">
+          <p className="display type-h2 mt-3 text-ink lg:mt-4 [@media(max-height:760px)]:lg:text-[36px]">
             Book your <span className="text-gold-deep">jaw pain assessment</span>
           </p>
-          <p className="mt-3 text-[clamp(14.5px,2vh,16px)] leading-[1.6] text-ink md:text-[18px] lg:mt-6 lg:leading-[1.65] [@media(max-height:760px)]:lg:mt-4 [@media(max-height:760px)]:lg:text-[16px]">
-            {intro.doctor}
-          </p>
-          <p className="mt-2.5 text-[clamp(13.5px,1.8vh,15px)] leading-[1.6] text-ink-soft md:text-[16px] lg:mt-4 lg:leading-[1.75] [@media(max-height:760px)]:lg:text-[14.5px]">
+          <p className="type-lead mt-5 text-ink lg:mt-6 [@media(max-height:760px)]:lg:mt-4 [@media(max-height:760px)]:lg:text-[16px]">{intro.doctor}</p>
+          <p className="type-body mt-3 text-ink-soft lg:mt-4 [@media(max-height:760px)]:lg:text-[15px]">
             Book online or call {site.phoneDisplay}. <strong className="font-bold text-ink">No referral needed.</strong>
           </p>
-          <div className="mt-5 flex flex-wrap gap-2.5 lg:mt-8 [@media(max-height:760px)]:lg:mt-5">
+          <div className="mt-7 flex flex-wrap gap-2.5 lg:mt-8 [@media(max-height:760px)]:lg:mt-5">
             <ArrowButton href={site.bookingHref} tone="ink">
               Book Online
             </ArrowButton>
@@ -234,14 +209,14 @@ function Slide({
     <div
       data-slide={n}
       className={cn(
-        "absolute inset-0 lg:grid",
+        "relative lg:absolute lg:inset-0 lg:grid",
         image.portrait ? (imageSide === "right" ? "lg:grid-cols-[minmax(0,1fr)_auto]" : "lg:grid-cols-[auto_minmax(0,1fr)]") : "lg:grid-cols-2",
-        n === "2" && "invisible",
+        n === "2" && "lg:invisible",
       )}
     >
-      {/* Image: full stage on phones (shrinks above the panel); on desktop one half, or a photo-shaped column for portraits */}
+      {/* Image: full width above the copy below 1024px; on desktop one half, or a photo-shaped column for portraits */}
       <figure
-        className={cn("absolute inset-0 lg:relative lg:h-full", imageSide === "right" && "lg:order-2", image.portrait && "lg:w-(--pw)")}
+        className={cn("relative lg:h-full", imageSide === "right" && "lg:order-2", image.portrait && "lg:w-(--pw)")}
         style={
           image.portrait
             ? // column width = (stage height − header) × photo aspect, so the photo fits it exactly (never cropped)
@@ -249,8 +224,13 @@ function Slide({
             : undefined
         }
       >
-        <div data-img={n} className="absolute inset-0 overflow-hidden bg-white will-change-[clip-path]">
-          <div data-img-fit={n} className="absolute inset-0 lg:bottom-0!">
+        <div data-img={n} className="relative overflow-hidden bg-white will-change-[clip-path] lg:absolute lg:inset-0">
+          <div
+            data-img-fit={n}
+            // Below 1024px a portrait keeps its own shape (capped, cropped from the bottom); diagrams size themselves
+            className={cn("relative lg:absolute lg:inset-0", image.portrait && "aspect-(--ar) max-h-[62svh] w-full lg:aspect-auto lg:max-h-none")}
+            style={{ "--ar": img0.w / img0.h } as React.CSSProperties}
+          >
             {image.portrait ? (
               // Portrait photo. On desktop this column is exactly the photo's shape (see the
               // grid below), so the photo fills it edge to edge with nothing cropped or faded.
@@ -259,7 +239,7 @@ function Slide({
                 <div aria-hidden className="absolute inset-0" style={{ background: image.portrait.bg }} />
                 <div
                   data-img-inner={n}
-                  className="absolute inset-x-0 top-(--hdr) bottom-0 origin-top will-change-transform"
+                  className="absolute inset-0 origin-top will-change-transform lg:top-(--hdr)"
                   style={{ "--hdr": `${HEADER}px` } as React.CSSProperties}
                 >
                   <Image
@@ -267,27 +247,28 @@ function Slide({
                     alt={image.images[0].alt}
                     fill
                     sizes="(min-width: 1024px) 40vw, 100vw"
-                    // Phones: show the whole photo, standing on the bottom edge of the strip. Desktop: the column matches the photo, so it fills it exactly.
-                    className="object-contain object-bottom lg:object-cover lg:object-top"
+                    // The frame matches the photo (phones: capped height, so the bottom is trimmed), so it fills it from the top.
+                    className="object-cover object-top"
                   />
                 </div>
               </>
             ) : (
               <div
                 data-img-inner={n}
-                className="absolute inset-0 flex flex-row items-center justify-center gap-3 px-3 pt-[calc(var(--hdr)+4px)] pb-9 will-change-transform sm:px-5 sm:pb-11 lg:flex-col lg:gap-6 lg:px-10 lg:pt-[calc(var(--hdr)+16px)] lg:pb-16"
+                className="relative flex flex-col items-center justify-center gap-4 px-4 pt-6 pb-12 will-change-transform sm:flex-row sm:gap-5 sm:px-8 sm:pt-8 sm:pb-14 lg:absolute lg:inset-0 lg:flex-col lg:gap-6 lg:px-10 lg:pt-[calc(var(--hdr)+16px)] lg:pb-16"
                 style={{ "--hdr": `${HEADER}px` } as React.CSSProperties}
               >
                 {/*
-                  Diagrams: each box's share of the space is proportional to its image's
-                  shape, so every image renders at the same width when stacked (desktop)
-                  and the same height when side by side (phones).
+                  Diagrams. Phones: stacked, full width, each at its own shape.
+                  Tablets / desktop: each box's share of the space is proportional to its
+                  image's shape, so the images render at the same height side by side
+                  (tablets) or the same width stacked (desktop).
                 */}
                 {image.images.map((img) => (
                   <div
                     key={img.src}
-                    className="relative h-full min-h-0 w-full min-w-0 basis-0 grow-(--row) lg:grow-(--col)"
-                    style={{ "--row": img.w / img.h, "--col": img.h / img.w } as React.CSSProperties}
+                    className="relative aspect-(--ar) max-h-[48svh] w-full min-w-0 sm:max-h-none sm:basis-0 sm:grow-(--row) lg:aspect-auto lg:h-full lg:min-h-0 lg:grow-(--col)"
+                    style={{ "--ar": img.w / img.h, "--row": img.w / img.h, "--col": img.h / img.w } as React.CSSProperties}
                   >
                     <Image src={img.src} alt={img.alt} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-contain" />
                   </div>
@@ -306,12 +287,12 @@ function Slide({
         </div>
       </figure>
 
-      {/* Copy: bottom sheet on phones, one half on desktop */}
+      {/* Copy: below the image under 1024px, one half on desktop */}
       <div
         data-panel={n}
         className={cn(
-          "absolute inset-x-0 bottom-0 z-10 bg-[#f8f6f2] px-6 pt-6 pb-7 shadow-[0_-24px_50px_-28px_rgba(0,0,0,0.45)] md:px-12 md:pt-9 md:pb-10",
-          "lg:relative lg:inset-auto lg:flex lg:items-center lg:bg-transparent lg:px-[clamp(40px,5vw,96px)] lg:pt-[calc(88px+24px)] lg:pb-16 lg:shadow-none lg:transform-none!",
+          "relative z-10 bg-[#f8f6f2] px-5 pt-8 pb-14 sm:px-8 md:px-12 md:pt-10 md:pb-16",
+          "lg:flex lg:items-center lg:bg-transparent lg:px-[clamp(40px,5vw,96px)] lg:pt-[calc(88px+24px)] lg:pb-16",
           imageSide === "right" && "lg:order-1",
           // Beside a portrait the text column can be very wide: keep the copy block next to the
           // photo (as on a 1024px screen) instead of floating in the middle of empty space

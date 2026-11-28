@@ -46,7 +46,7 @@ export function Monitoring() {
         </div>
         <div className="lg:pt-9">
           <Reveal className="copy">
-            <p className="text-[18px]! text-ink">Jaw pain crosses the boundary between dentistry and medicine. Teeth, muscles, joints, headaches and sleep can all matter.</p>
+            <p className="type-lead text-ink">Jaw pain crosses the boundary between dentistry and medicine. Teeth, muscles, joints, headaches and sleep can all matter.</p>
             <p>
               {site.practitioner} is registered as both a dentist and a medical practitioner and holds{" "}
               <strong className="font-bold text-ink">BDS (Hons), MBBS and MMed (Sleep Medicine)</strong> qualifications. He has over 20 years of experience
@@ -60,8 +60,8 @@ export function Monitoring() {
 
           <Reveal delay={0.1} className="mt-10 rounded-2xl bg-paper p-8 ring-1 ring-ink/[0.06] md:p-10">
             <h3 className="eyebrow text-gold-deep">Visiting our clinic</h3>
-            <p className="mt-4 font-display text-[24px] leading-[1.2] text-ink">Sydney Centre for TMJ and Sleep Therapy</p>
-            <ul className="mt-5 space-y-3 text-[15.5px] leading-[1.6] text-ink-soft">
+            <p className="type-h4 mt-4 font-display leading-[1.2] text-ink">Sydney Centre for TMJ and Sleep Therapy</p>
+            <ul className="type-body mt-5 space-y-3 text-ink-soft">
               <li className="flex gap-3">
                 <MapPin className="mt-1 size-4 shrink-0 text-gold-deep" />
                 {site.address.join(", ")}
@@ -98,7 +98,7 @@ export function Monitoring() {
               <ArrowButton href={site.phoneHref} tone="ink">
                 Call {site.phoneDisplay}
               </ArrowButton>
-              <p className="text-[14.5px] font-bold text-ink">No referral needed.</p>
+              <p className="type-note font-bold text-ink">No referral needed.</p>
             </div>
           </Reveal>
         </div>

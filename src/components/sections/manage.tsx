@@ -64,7 +64,7 @@ export function Manage() {
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-20">
           <SectionHeading eyebrow="Our Approach" title="TMJ and jaw pain" accent="treatment options" />
           <Reveal className="copy lg:pt-9">
-            <p className="text-[18px]! text-cream">
+            <p className="type-lead text-cream">
               <Rich text="For painful TMD, care generally starts with conservative, reversible approaches. The aim is to improve comfort and function while avoiding unnecessary permanent changes to the teeth or bite. [1,16]" />
             </p>
             <p>
@@ -529,8 +529,8 @@ function MobileArchive({ steps, areaStart }: { steps: Step[]; areaStart: number[
                   i === active ? "visible translate-y-0 opacity-100" : cn("invisible opacity-0", i < active ? "-translate-y-3" : "translate-y-3"),
                 )}
               >
-                <h4 className="font-display text-[clamp(17px,2.4vh,20px)] leading-[1.25] text-ink">{s.item.title}</h4>
-                <div className="mt-2 space-y-[clamp(4px,0.9vh,8px)] text-[clamp(14px,1.9vh,16px)] leading-[1.6] text-ink md:text-[17px]">
+                <h4 className="font-display text-[20px] leading-[1.25] text-ink md:text-[22px]">{s.item.title}</h4>
+                <div className="type-body mt-2 space-y-[clamp(4px,0.9vh,8px)] text-ink">
                   {s.item.body.map((p) => (
                     <p key={p}>
                       <Rich text={p} />
@@ -563,7 +563,7 @@ function WhyChoose() {
       <div className="grid gap-8 lg:grid-cols-2 lg:items-end lg:gap-20">
         <Reveal>
           <p className="eyebrow text-gold">Why choose us</p>
-          <h3 className="display mt-4 text-[26px] text-cream sm:text-[32px] md:text-[40px]">
+          <h3 className="display type-h2 mt-4 text-cream">
             Why choose Sydney Centre for TMJ and Sleep Therapy <span className="text-gold">in Sydney CBD?</span>
           </h3>
         </Reveal>

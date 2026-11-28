@@ -35,7 +35,7 @@ export function Sleep() {
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
           <SectionHeading tone="light" eyebrow="Sleep, Jaw Pain & Headaches" title="Waking with jaw pain" accent="or headaches?" />
           <Reveal className="copy lg:pt-9">
-            <p className="text-[18px]! text-ink">If mornings start with a sore jaw or headache, mention your sleep.</p>
+            <p className="type-lead text-ink">If mornings start with a sore jaw or headache, mention your sleep.</p>
             <p>
               <Rich text="Grinding, migraine, sleep apnoea and other conditions can produce morning symptoms. The pattern needs assessment, not guesswork. [20,22]" />
             </p>

@@ -48,7 +48,7 @@ export function Assess() {
                   <AccordionPrimitive.Header>
                     <AccordionPrimitive.Trigger className="flex w-full items-center gap-5 px-6 py-6 text-left md:px-8">
                       <span className="font-display text-[22px] text-gold-deep">{String(i + 1).padStart(2, "0")}</span>
-                      <span className="flex-1 font-display text-[21px] leading-tight text-ink md:text-[23px]">{s.title}</span>
+                      <span className="type-h4 flex-1 font-display leading-tight text-ink">{s.title}</span>
                       <span className="grid size-10 shrink-0 place-items-center rounded-md bg-ink text-cream transition-colors duration-300 group-data-[state=open]:bg-gold group-data-[state=open]:text-ink">
                         <Plus className="size-4 transition-transform duration-300 group-data-[state=open]:rotate-45" />
                       </span>
@@ -64,7 +64,7 @@ export function Assess() {
                       {s.list && (
                         <ul className="mt-3 space-y-2">
                           {s.list.map((li) => (
-                            <li key={li} className="flex gap-3 text-[16px] leading-[1.6]">
+                            <li key={li} className="type-body flex gap-3">
                               <span aria-hidden className="mt-[0.75em] h-px w-4 shrink-0 bg-gold-deep" />
                               {li}
                             </li>
@@ -84,8 +84,8 @@ export function Assess() {
           </RevealGroup>
 
           <Reveal className="mt-6 rounded-2xl bg-ink p-7 text-cream md:p-8">
-            <p className="font-display text-[22px] leading-[1.25] md:text-[24px]">Ready to find out what is causing your jaw pain?</p>
-            <p className="mt-2 text-[15.5px] leading-[1.6] text-cream/75">
+            <p className="type-quote">Ready to find out what is causing your jaw pain?</p>
+            <p className="type-body mt-2 text-cream/75">
               Book online or call {site.phoneDisplay}. <strong className="font-bold text-cream">No referral needed.</strong>
             </p>
             <div className="mt-5 flex flex-wrap gap-2.5">

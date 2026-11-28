@@ -37,7 +37,7 @@ export function Cta() {
             structures and explain the next step.
           </p>
           <p>You can come with questions. You do not need to choose a treatment before we understand the problem.</p>
-          <p className="text-[19px]! text-cream">Book online or call {site.phoneDisplay} to book or discuss the appointment. No referral needed.</p>
+          <p className="type-lead text-cream">Book online or call {site.phoneDisplay} to book or discuss the appointment. No referral needed.</p>
         </Reveal>
 
         <Reveal delay={0.1} className="mt-10 flex flex-wrap items-center justify-center gap-3">
@@ -46,7 +46,7 @@ export function Cta() {
             Call {site.phoneDisplay}
           </ArrowButton>
         </Reveal>
-        <p className="mx-auto mt-6 flex max-w-[640px] items-start justify-center gap-2 text-center text-[15px] leading-[1.6] text-cream/75">
+        <p className="mx-auto mt-6 flex max-w-[640px] items-start justify-center gap-2 type-note text-center text-cream/75">
           <MapPin className="mt-1 size-4 shrink-0 text-gold" />
           <span>
             Sydney Centre for TMJ and Sleep Therapy, {site.address.join(", ")}. Monday to Friday, 9 am to 5 pm.
@@ -54,7 +54,7 @@ export function Cta() {
         </p>
 
         <Reveal data-trail-off className="mx-auto mt-16 max-w-[860px] rounded-2xl bg-panel p-8 text-center ring-1 ring-cream/10 md:p-10">
-          <h3 className="display text-[28px] text-cream md:text-[34px]">Important information</h3>
+          <h3 className="display type-h3 text-cream">Important information</h3>
           <div className="copy mt-4">
             <p>
               This page provides general information and does not replace an individual assessment. Treatment suitability, benefits, risks and costs

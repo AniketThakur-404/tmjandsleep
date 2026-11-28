@@ -26,7 +26,7 @@ export function Faq() {
                     <h3>
                       <AccordionPrimitive.Trigger className="flex w-full items-center gap-5 px-6 py-5 text-left md:px-8">
                         <span className="font-display text-[20px] text-gold-deep">{String(i + 1).padStart(2, "0")}</span>
-                        <span className="flex-1 font-display text-[19px] leading-tight text-ink md:text-[21px]">{f.q}</span>
+                        <span className="type-h4 flex-1 font-display leading-tight text-ink">{f.q}</span>
                         <span className="grid size-10 shrink-0 place-items-center rounded-md bg-ink text-cream transition-colors duration-300 group-data-[state=open]:bg-gold group-data-[state=open]:text-ink">
                           <Plus className="size-4 transition-transform duration-300 group-data-[state=open]:rotate-45" />
                         </span>

@@ -134,7 +134,7 @@ function Slide({
           {slide.title}
         </Heading>
         {slide.body && (
-          <div className="mt-4 max-w-[680px] space-y-3 text-[15px] leading-relaxed text-cream/90 md:text-[18px]">
+          <div className="type-lead mt-4 max-w-[680px] space-y-3 text-cream/90">
             {slide.body}
           </div>
         )}

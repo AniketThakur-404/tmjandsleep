@@ -162,14 +162,14 @@ function Card({ item: c, index: i, total, tone }: { item: StackItem; index: numb
       )}
     >
       {c.image && <StackImage img={c.image} dark={dark} />}
-      <div className="flex flex-col justify-center p-8 md:p-10 lg:p-12">
+      <div className="flex flex-col justify-center p-6 sm:p-8 md:p-10 lg:p-12">
         <p className={cn("eyebrow", dark ? "text-gold" : "text-gold-deep")}>
           {String(i + 1).padStart(2, "0")} <span className={dark ? "text-cream/40" : "text-ink/35"}>/ {String(total).padStart(2, "0")}</span>
           {c.label && <span className="ml-3">{c.label}</span>}
         </p>
         <h3
           className={cn(
-            dark ? "mt-4 text-[26px] leading-[1.15] text-cream uppercase md:text-[30px]" : "mt-4 font-display text-[26px] leading-[1.15] text-ink md:text-[30px]",
+            dark ? "type-h4 mt-4 leading-[1.15] text-cream uppercase" : "type-h4 mt-4 font-display leading-[1.15] text-ink",
           )}
         >
           {c.title}
